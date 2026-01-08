@@ -59,13 +59,13 @@
         </el-form-item>
         <el-form-item label="商品图片" prop="image">
           <el-upload class="avatar-uploader" action="#" :show-file-list="false" :http-request="handleUploadImage" :before-upload="beforeAvatarUpload">
-             <img v-if="_image" :src="_image" class="avatar">
+             <img v-if="imageUrl" :src="imageUrl" class="avatar">
             <i v-else class="el-icon-plus avatar-uploader-icon"></i>
           </el-upload>
         </el-form-item>
         <el-form-item label="商品详情图片" prop="imageDetail">
           <el-upload class="avatar-uploader" action="#" :show-file-list="false" :http-request="handleUploadImageDetail" :before-upload="beforeAvatarUpload1">
-             <img v-if="_imageDetail" :src="_imageDetail" class="avatar">
+             <img v-if="imageDetailUrl" :src="imageDetailUrl" class="avatar">
             <i v-else class="el-icon-plus avatar-uploader-icon"></i>
           </el-upload>
         </el-form-item>
@@ -91,8 +91,8 @@ export default {
       btnLoading: false,
       title: "",
       adminUrl: baseURL.uploadFileUrl,
-      _image: "",
-      _imageDetail: "",
+      imageUrl: "",
+      imageDetailUrl: "",
       form: {
         id: "",
         name: "",
@@ -164,8 +164,8 @@ export default {
         imageDetail: "",
         sales: 0
       };
-      this._image = "";
-      this._imageDetail = "";
+      this.imageUrl = "";
+      this.imageDetailUrl = "";
     },
     // 编辑
     handleEditItem(row) {
@@ -180,8 +180,8 @@ export default {
       this.form.image = row.image;
       this.form.imageDetail = row.imageDetail;
       this.form.sales = row.sales;
-      this._image = baseURL.baseUrl + '/' + row.image;
-      this._imageDetail = baseURL.baseUrl + '/' + row.imageDetail;
+      this.imageUrl = baseURL.baseUrl + '/' + row.image;
+      this.imageDetailUrl = baseURL.baseUrl + '/' + row.imageDetail;
     },
     // 删除
     handleDelete(row) {
@@ -248,7 +248,7 @@ export default {
         const res = await uploadFile(formData);
         if (res.code === 200) {
           this.form.image = res.data;
-          this._image = URL.createObjectURL(options.file);
+          this.imageUrl = URL.createObjectURL(options.file);
           this.$message.success("图片上传成功");
           // 手动清除验证错误
           this.$refs.form.clearValidate('image');
@@ -278,7 +278,7 @@ export default {
         const res = await uploadFile(formData);
         if (res.code === 200) {
           this.form.imageDetail = res.data;
-          this._imageDetail = URL.createObjectURL(options.file);
+          this.imageDetailUrl = URL.createObjectURL(options.file);
           this.$message.success("图片上传成功");
           // 手动清除验证错误
           this.$refs.form.clearValidate('imageDetail');
