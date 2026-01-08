@@ -1,0 +1,13 @@
+该项目运行环境如下：
+
+1、JDK 17
+2、MySQL 8
+
+-------------------------
+
+运行步骤：
+
+1、设置MySQL账号密码为root/123456
+2、在MySQL中创建shop库
+3、将.sql文件导入到shop库中自动建表
+4、通过java -jar shop-xxxx.jar命令启动jar包

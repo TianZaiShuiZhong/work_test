@@ -1,0 +1,181 @@
+26 - 完善文件上传功能
+
+一、引言
+
+在 Vue2 项目中，文件上传功能是一个常见的需求，尤其是在管理端商品管理页面中，上传商品图片和详情图片是必不可少的功能。本实验手册将详细介绍如何优化请求拦截器、封装文件上传接口以及将图片上传组件改为自定义上传方式。
+
+二、代码设计
+
+该功能主要涉及以下几个部分的代码修改：
+
+1. 优化请求拦截器（在 request.js 中）
+2. 封装文件上传接口（在 api.js 中）
+3. 将图片上传组件改为自定义上传方式（在 src/views/admin/list.vue 中）
+
+1. 优化请求拦截器
+
+在 request.js 中添加 FormData 检测，确保文件上传时使用正确的 Content-Type。
+
+代码实现
+
+// 请求拦截器
+service.interceptors.request.use(
+  config => {
+    // 可以在这里添加请求头等信息
+    if (store.state.token) {
+      config.headers['Authorization'] = `Bearer ${store.state.token}`;
+    }
+    // 如果是 FormData，让浏览器自动设置 Content-Type
+    if (config.data instanceof FormData) {
+      delete config.headers['Content-Type'];
+    }
+    return config;
+  },
+  error => {
+    // 请求错误处理
+    console.log(error); // for debug
+    return Promise.reject(error);
+  }
+);
+
+
+2. 封装文件上传接口
+
+在 api.js 中添加 /file/upload 接口的封装，确保页面能调用该接口。
+
+代码实现
+
+// 文件上传
+export const uploadFile = data => post('/file/upload', data);
+
+
+3. 将图片上传组件改为自定义上传方式
+
+在 src/views/admin/list.vue 商品管理页面中修改图片上传组件和相关函数。
+
+代码实现
+
+1. 修改图片上传组件
+
+在商品管理页面中，将 el-upload 组件的 :http-request 属性指向自定义上传函数。
+<el-form-item label="商品图片" prop="image">
+  <el-upload
+    class="avatar-uploader"
+    :show-file-list="false"
+    :http-request="handleUploadImage"
+    :before-upload="beforeAvatarUpload"
+  >
+    
+    <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+  </el-upload>
+</el-form-item>
+<el-form-item label="商品详情图片" prop="imageDetail">
+  <el-upload
+    class="avatar-uploader"
+    :show-file-list="false"
+    :http-request="handleUploadImageDetail"
+    :before-upload="beforeAvatarUpload1"
+  >
+    
+    <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+  </el-upload>
+</el-form-item>
+
+
+2. 修改图片上传相关函数
+
+在商品管理页面中，添加自定义上传函数和相关逻辑。
+// 引入 uploadFile 接口
+import { getGoodsList, addGoods, updateGoods, deleteGoods, uploadFile } from "../../service/api.js";
+
+// 自定义上传商品图片
+async handleUploadImage(options) {
+  const formData = new FormData();
+  formData.append('file', options.file);
+  try {
+    const res = await uploadFile(formData);
+    if (res.code === 200) {
+      this.form.image = res.data;
+      this._image = URL.createObjectURL(options.file);
+      this.$message.success("图片上传成功");
+    } else {
+      this.$message.error(res.msg || "图片上传失败");
+    }
+  } catch (error) {
+    this.$message.error("图片上传失败");
+  }
+},
+
+// 自定义上传商品详情图片
+async handleUploadImageDetail(options) {
+  const formData = new FormData();
+  formData.append('file', options.file);
+  try {
+    const res = await uploadFile(formData);
+    if (res.code === 200) {
+      this.form.imageDetail = res.data;
+      this._imageDetail = URL.createObjectURL(options.file);
+      this.$message.success("图片上传成功");
+    } else {
+      this.$message.error(res.msg || "图片上传失败");
+    }
+  } catch (error) {
+    this.$message.error("图片上传失败");
+  }
+},
+
+// 上传图片前的验证
+beforeAvatarUpload(file) {
+  const isJPG = file.type === "image/jpeg" || file.type === "image/png";
+  const isLt5M = file.size / 1024 / 1024 < 5;
+  if (!isJPG) {
+    this.$message.error("上传图片只能是 JPG/PNG 格式!");
+  }
+  if (!isLt5M) {
+    this.$message.error("上传图片大小不能超过 5MB!");
+  }
+  return isJPG && isLt5M;
+},
+
+beforeAvatarUpload1(file) {
+  const isJPG = file.type === "image/jpeg" || file.type === "image/png";
+  const isLt5M = file.size / 1024 / 1024 < 5;
+  if (!isJPG) {
+    this.$message.error("上传图片只能是 JPG/PNG 格式!");
+  }
+  if (!isLt5M) {
+    this.$message.error("上传图片大小不能超过 5MB!");
+  }
+  return isJPG && isLt5M;
+},
+
+
+三、代码解析
+
+1. 优化请求拦截器
+
+• 目的：确保文件上传时使用正确的 Content-Type。
+
+• 实现：在请求拦截器中检测 config.data 是否为 FormData，如果是，则删除 Content-Type 请求头，让浏览器自动设置。
+
+2. 封装文件上传接口
+
+• 目的：提供一个统一的文件上传接口，方便页面调用。
+
+• 实现：在 api.js 中封装 /file/upload 接口，使用 post 方法发送请求。
+
+3. 自定义图片上传
+
+• 目的：将图片上传组件改为自定义上传方式，以便更好地控制上传过程。
+
+• 实现：
+
+  • 使用 el-upload 组件的 :http-request 属性指向自定义上传函数。
+
+  • 在自定义上传函数中，使用 FormData 构造文件数据，并调用封装的 uploadFile 接口。
+
+  • 在上传前进行图片格式和大小的验证。
+
+四、总结
+
+本章节详细介绍了如何优化请求拦截器、封装文件上传接口以及将图片上传组件改为自定义上传方式。通过这些改进，文件上传功能将更加灵活和可控，能够更好地适应不同的业务需求。后续可以在该模块的基础上，进一步扩展功能，如多文件上传、上传进度显示等。

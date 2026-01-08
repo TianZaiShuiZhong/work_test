@@ -1,0 +1,1634 @@
+03-创建数据表
+创建数据表
+基于JPA与数据表可以形成一对一的关系，因此数据表的创建十分关键。
+01 开发模块分析
+我们需要完成商品管理模块、订单管理模块、会员管理模块、权限管理模块。
+0.1 商品模块分析
+商品模块需要存储商品相关信息，包括以下字段：
+•	商品编号 ：整型，主键
+•	商品名称 ：字符串类型
+•	货物品牌 ：字符串类型
+•	商品销量 ：整型
+•	商品价格 ：双精度浮点型
+•	商品颜色 ：字符串类型
+•	商品封面图 ：字符串类型
+•	商品详情图 ：字符串类型
+•	商品上架状态：整型
+0.2 订单模块分析
+订单模块需要存储订单信息，同时还要记录该订单内包含多少个商品，因此需要两个数据表分别记录订单概述信息以及订单详情信息。
+订单概要数据表中应该包含以下字段：
+•	订单编号：整型，主键
+•	商品总价：双精度浮点型
+•	下单用户：整型，作为外键，索引
+•	创建时间：时间戳
+•	订单状态：整型
+订单详情数据表中应该包含以下字段：
+•	详情编号：整型，主键
+•	关联订单：整型，作为外键，索引
+•	关联商品：整型，作为外键，索引
+•	货物数量：整型
+0.3 购物车分析
+常规的电商平台都允许用户将意向商品添加到购物车，以便统一结算。为支持购物车功能，我们需要设计存储购物车信息的数据表。该数据表应该包含以下字段：
+•	记录编号：整型，主键
+•	关联商品：整型，作为外键，索引
+•	商品数量：整型
+•	关联用户：整型，作为外键，索引
+0.4 会员模块分析
+会员模块主要支持整个系统的用户注册、登录、退出等账号行为。因此它需要设计以下字段用于存储用户信息：
+•	用户编号：整型，主键
+•	登录账号：字符串类型
+•	登录密码：字符串类型
+•	用户昵称：字符串类型
+•	用户状态：整型
+02 可视化建表
+相比于直接编写SQL脚本，IntelliJ IDEA的数据库操作面板允许我们可视化创建数据表，这可以使得开发者避免SQL脚本的各种关键字的困扰，能快速设置数据库，进而可以将更多精力投入到业务逻辑的代码开发中。
+2.1 创建商品表
+根据前面的分析，我们得到数据表必要的字段。开始创建表之前，我们还得做一些语言转换工作：
+商品数据表名称：shop_goods
+字段在表中名字：
+1.	商品编号 ：整型，主键 ：id
+2.	商品名称 ：字符串类型 ：goods_name
+3.	货物品牌 ：字符串类型 ：goods_brand
+4.	商品销量 ：整型 ：goods_sales
+5.	商品价格 ：双精度浮点型 ：goods_cost
+6.	商品颜色 ：字符串类型 ：goods_color
+7.	商品封面图 ：字符串类型 ：goods_image
+8.	商品详情图 ：字符串类型 ：goods_image_detail
+9.	商品上架状态：整型 ：goods_state
+2.1.1 字段设置
+接下来我们将进行可视化建表：
+打开IDEA的数据库操作面板，右键shop库，选择“创建—表”，并在弹出窗口中输入表的名称，如下图所示：
+  
+接下来需要往数据表中添加字段，可以通过左上角的“+”按钮操作，如下图所示：
+ 
+接下来需要依次往shop_goods表中添加id/goods_name/goods_brand/...等9个字段。下面以id字段为例截图说明：
+ 
+再以字符串类型的商品名称（goods_name）为例截图说明操作流程：
+ 
+按照上述流程，依次将商品表的字段添加完毕，最后结果如下所示：
+ 
+2.1.2 主键外键设置
+上一步仅是创建相关字段，尚未设置主键。接下来我们将可视化设置主键。
+右键表的名字，选择“新建—主键”，然后选择id字段，如下图所示：
+ 
+ 
+2.1.3 完成创建
+最后点击创建面板右下角的“确定”按钮，即可完成shop_goods表的创建。
+2.2 创建用户表
+用户表名称：shop_user
+用户表字段：
+1.	用户编号：整型，主键：id
+2.	登录账号：字符串类型：user_name
+3.	登录密码：字符串类型：user_password
+4.	用户昵称：字符串类型：user_nickname
+5.	用户状态：整型 ：user_state
+2.2.1 字段设置
+在IDEA的数据库可视化面板，通过鼠标右键新建表。
+表名称填写shop_user 。
+表字段分别对应上述5个字段。
+ 
+    
+2.2.2 主键外键设置
+用户表没有外键，因此只需将id字段设置为主键即可。
+ 
+2.2.3 完成创建
+最后点击创建面板右下角的“确定”按钮，即可完成shop_user表的创建。
+2.3 创建订单表
+订单表名称：shop_order
+订单表字段：
+1.	订单编号：整型，主键 ：id
+2.	商品总价：双精度浮点型 ：order_cost
+3.	下单用户：整型，作为外键，索引 ：order_user_id
+4.	创建时间：时间戳 ：order_create_time
+5.	订单状态：整型 ：order_state
+2.3.1 字段设置
+通过IDEA数据库面板新建表。
+表名称填写shop_order 
+表字段分别填写上述5个字段：
+     
+2.3.2 主键外键设置
+订单表涉及主键的设置以及外键设置。
+设置id字段为主键：
+ 
+设置order_user_id为外键。通过右键表名，选择“新建—外键”：
+  
+设置order_user_id索引，有助于提高该字段的检索效率。通过右键表名，选择“新建—索引”（不用管索引名称）：
+  
+2.3.3 完成创建
+最后点击创建面板右下角的“确定”按钮，即可完成shop_order表的创建。
+2.4 创建订单详情表
+订单详情表名称：shop_order_detail
+订单详情表字段：
+1.	详情编号：整型，主键 ：id
+2.	关联订单：整型，作为外键，索引 ：order_id
+3.	关联商品：整型，作为外键，索引 ：goods_id
+4.	货物数量：整型 ：goods_number
+2.4.1 字段设置
+通过IDEA数据库面板新建表。
+表名称填写shop_order_detail
+表字段分别填写上述4个字段：
+    
+2.4.2 主键外键设置
+需要将id字段设置为主键：
+ 
+需要将order_id和goods_id设置为外键：
+  
+此外，为了提高外键的检索效率，还需要将这两个外键字段设置为索引（索引名称会自动生成，无需跟截图一致）：
+  
+2.4.3 完成创建
+最后点击创建面板右下角的“确定”按钮，即可完成shop_order_detail表的创建。
+2.5 创建购物车表
+购物车表名称：shop_cart
+购物车表字段：
+1.	记录编号：整型，主键 ：id
+2.	关联商品：整型，作为外键，索引 ：cart_goods_id
+3.	商品数量：整型 ：cart_goods_number
+4.	关联用户：整型，作为外键，索引 ：cart_user_id
+2.5.1 字段设置
+通过IDEA数据库面板新建表。
+表名称填写shop_cart 
+表字段分别填写上述4个字段：
+    
+2.5.2 主键外键设置
+需要将id设置为主键：
+ 
+需要将cart_goods_id和cart_user_id设置为外键：
+  
+此外，为了提高外键的检索效率，还需要将这两个外键字段设置为索引（索引名称会自动生成，无需跟截图一致）：
+ 
+ 
+2.5.3 完成创建
+最后点击创建面板右下角的“确定”按钮，即可完成shop_cart表的创建。
+
+04-生成JPA实体
+一、生成JPA实体
+数据表创建完成后，需要建立JPA框架与数据表的映射以实现ORM功能。
+IntelliJ IDEA的数据库操作面板可以帮助我们快速创建数据表对应的JPA实体。
+我们可以通过鼠标右键，点击shop库，选择“从数据库创建JPA实体”，如下图所示：
+ 
+在弹出的页面中，勾选所有表，然后点击确认生成：
+ 
+此时可以看到在包的根目录下，对应表的JPA实体已经生成：
+ 
+随后需要将ShopCart中的字段名字修改如下：
+ 
+需要将ShopGood中的字段名字修改如下：
+ 
+需要将ShopOrder中的字段名字修改如下：
+ 
+需要将ShopOrderDetail中的字段名字修改如下：
+ 
+需要将ShopUser中字段名字修改如下：
+ 
+1 细分模块目录
+上述的JPA实体都存放在包的根目录，这不利于项目按模块开发。因此接下来需要给项目通过目录来实现模块划分。
+每个模块当中涉及的各个包名含义如下：
+•	dao：Data Access Object，数据读取工具，主要用于跟数据库通信。
+•	dto：Data Transfer Object，数据传输对象，一般跟数据表对应。
+•	controller：在MVC（Model-View-Controller）架构模式中，Controller负责接收用户的请求，调用相应的服务（Service）来处理业务逻辑，并返回结果给用户。
+•	service：Service层是业务逻辑层，它封装了应用程序的业务逻辑。
+•	vo：VO是视图对象，它主要用于表示层向用户展示数据。VO通常包含了页面所需的数据，这些数据可以从多个模型对象中聚合而来，以便于在视图层进行展示。
+2.1 创建商品模块
+在org.example.shop下通过右键创建goods软件包，并在goods里面创建controller、dao、dto、service、vo软件包，如下图所示：
+ 
+ 
+最终效果如下图所示：
+ 
+最后拖动ShopGood和ShopCart类，放入goods.dto目录下，点击“重构”IDEA即可自动帮我们处理包目录的问题：
+ 
+2.2 创建订单模块
+同样的，在org.example.shop下通过右键创建order软件包，并在order里面创建controller、dao、dto、service、vo软件包。
+并把ShopOrder和ShopOrderDetail移到order.dto目录下。
+最终结果如下图所示：
+ 
+2.3 创建系统模块
+在org.example.shop下通过右键创建sys软件包，并在order里面创建controller、dao、dto、service、vo软件包。
+并把ShopUser移到sys.dto下。
+最终结果如下图所示：
+ 
+2.4 创建工具模块
+在org.example.shop下通过右键创建util软件包，该包下主要存放一些自定义的工具类文件，因此不需要创建额外的子目录。结果如下：
+ 
+2.5 创建管理员模块
+在org.example.shop下通过右键创建admin软件包，该包下主要存放管理员管理整个系统的接口，因此不需要创建额外的子目录。结果如下：
+ 
+2 生成DAO操作对象
+3.1 创建商品模块DAO对象
+在goods.dao文件夹处通过鼠标右键，选择“新建—Spring Data JPA仓库”，如下图所示：
+ 
+在弹窗中下拉选择ShopGood实体，生成DAO操作对象，如下图所示：
+ 
+最终结果如下图所示：
+ 
+同样的操作流程，也为ShopCart购物车实体创建DAO操作对象，结果如下图所示：
+ 
+3.2 创建订单模块DAO对象
+同样的，通过鼠标右键order.dao文件夹，分别创建ShopOrder与ShopOrderDetail的Spring Data JPA仓库。最终结果如下图所示：
+ 
+3.3 创建系统模块DAO对象
+类似的，通过鼠标右键sys.dao文件夹，创建ShopUser的Spring Data JPA仓库，最终结果如下图所示：
+ 
+05-商品模块开发
+商品模块开发
+商品模块的开发主要涉及到商品数据表shop_goods的增删改查维护。
+具体来看，该模块涉及以下功能：
+1.	查看单个商品信息
+2.	通过名称搜索商品
+3.	分页查询商品列表
+4.	根据颜色分页查询商品列表
+5.	根据品牌分页查询商品列表
+6.	根据品牌和颜色分页查询商品列表
+7.	添加商品
+8.	修改商品
+9.	删除商品
+10.	商品上下架
+1 查看单个商品信息
+在org.example.shop.goods.service包下创建GoodsService.java文件，用来编写商品的逻辑代码。
+GoodsService.java文件的初始化代码如下所示：
+@Service
+public class GoodsService {
+ @Autowired
+ private ShopGoodRepository goodRepository;
+}
+上述代码主要通过@Service注解将当前类对象注册为Spring部件，同时通过@Autowired将DAO对象注入该Service中以便访问数据库。
+未实现查看单个商品信息，我们需要接受一个商品ID，并通过DAO对象查询数据库，具体代码如下：
+/**
+ * 单个商品信息
+ * @param id 商品ID
+ * @return 商品信息
+ */
+ public ShopGood findGoodsById(int id) {
+ return goodRepository.findById(id).orElse(null);
+ }
+Option.orElse()方法主要用于判断目标数据是否存在，若不存在则返回提供的值。代码里若根据ID查询的商品信息不存在，则返回null。
+2 通过名称搜索商品
+JPA生成的DAO对象只提供针对主键的搜索功能，若想要使用其他字段搜索（例如该功能里的商品名称搜索），则需要在DAO对象中显式声明。
+打开org.example.shop.goods.dao.ShopGoodRepository.java文件，新增以下红色部分代码：
+public interface ShopGoodRepository extends JpaRepository<ShopGood, Integer> {
+ShopGood findShopGoodByName(String name);
+}
+JPA的DAO对象为接口对象，其会根据所定义的数据实体（这里是ShopGood）自动根据命名来组装JDBC方法用于访问数据库。因此上述代码可以帮助我们实现通过商品名称查找特定的商品。
+此外，还需要在Service层封装逻辑代码，打开org.example.shop.goods.service.GoodsService.java文件，新增通过名称搜索商品逻辑代码如下：
+ /**
+ * 通过名称查找商品
+ * @param name 商品名称
+ * @return 商品信息
+ */
+ public ShopGood findGoodsByName(String name) {
+ return goodRepository.findShopGoodByName(name);
+ }
+3 分页查询商品列表
+JPA框架内置分页器功能，因此无需额外配置。DAO对象默认也会自动生成基础分页接口。
+因此，我们只需在Service层封装逻辑代码。
+在Service层GoodsService.java中封装逻辑代码：
+ public List<ShopGood> findGoodsByPage(PageRequest pageRequest) {
+ return goodRepository.findAll(pageRequest).getContent();
+ }
+上述代码中PageRequest对象即JPA内置的分页器对象。
+4 根据颜色分页查询商品列表
+涉及到特定字段的分页查询时，我们需要进行两步操作：一，在DAO对象中声明接口；二，在Service层中封装逻辑代码。
+在ShopGoodRepository.java中声明根据颜色分页的接口：
+Page<ShopGood> findAllByColor(String color, Pageable page);
+需要注意的是，这里用到的Page和Pageable对象都是org.springframework.data.domain包下的，不要错用其他包下的同名对象！
+在Service层GoodsService.java中封装逻辑代码：
+ public List<ShopGood> findGoodsByPageAndColor(String color, PageRequest pageRequest) {
+ return goodRepository.findAllByColor(color, pageRequest).getContent();
+ }
+5 根据品牌分页查询商品列表
+与颜色分页查询类似，根据品牌分页查询页需要声明DAO接口以及封装Service层逻辑代码。
+在ShopGoodRepository.java中声明接口：
+Page<ShopGood> findAllByBrand(String brand, Pageable page);
+在Service层GoodsService.java中封装逻辑代码：
+ public List<ShopGood> findGoodsByPageAndBrand(String brand, PageRequest pageRequest) {
+ return goodRepository.findAllByBrand(brand, pageRequest).getContent();
+ }
+6 根据品牌和颜色分页查询商品列表
+在ShopGoodRepository.java中声明接口：
+Page<ShopGood> findAllByColorAndBrand(String color, String brand, Pageable page);
+在Service层GoodsService.java中封装逻辑代码：
+ public List<ShopGood> findGoodsByPageAndColorAndBrand(String color, String brand, PageRequest pageRequest) {
+ return goodRepository.findAllByColorAndBrand(color, brand, pageRequest).getContent();
+ }
+7 添加商品
+添加商品的核心，主要是将ShopGood对象存储至数据库。
+DAO对象基础的存储接口会自动生成，无需重复声明。我们主要在Service层封装逻辑代码即可。
+在Service层GoodsService.java中封装逻辑代码：
+ /**
+ * 添加商品
+ * @param good 商品信息
+ * @return 结果
+ */
+ public boolean saveGood(ShopGood good) {
+ good.setSales(0);
+ good.setState(1);
+ goodRepository.save(good);
+ return true;
+ }
+这里需要注意到ShopGood商品对象中包含销量和状态两个字段。默认来说，一个新的商品上架其销量是0，其状态也应该是已上架（这里通过0和1表示下架和上架）。
+8 修改商品
+修改商品在JPA中与添加商品逻辑类似，唯一不同的地方在于会判断其主键（即id字段）是否存在，若存在则是更新操作，若不存在则是新增操作。
+在Service层GoodsService.java中封装逻辑代码：
+ /**
+ * 修改商品
+ * @param good 商品信息
+ * @return 结果
+ */
+ public boolean updateGood(ShopGood good) {
+ goodRepository.save(good);
+ return true;
+ }
+9 删除商品
+DAO对象基础的删除接口会自动生成，无需重复声明。我们主要在Service层封装逻辑代码即可。
+在Service层GoodsService.java中封装逻辑代码：
+ /**
+ * 删除商品
+ * @param id 商品ID
+ * @return 结果
+ */
+ public boolean deleteGood(int id) {
+ goodRepository.deleteById(id);
+ return true;
+ }
+10 商品上下架
+商品上下架主要通过state字段来控制，即更新state字段存储数据即可变更商品的上下架状态。
+在Service层GoodsService.java中封装逻辑代码：
+ /**
+ * 商品上下架
+ * @param good 商品信息
+ * @return 结果
+ */
+ public boolean changeGoodState(ShopGood good) {
+ ShopGood g = findGoodsById(good.getId());
+ g.setState(good.getState());
+ goodRepository.save(g);
+ return true;
+ }
+商品模块测试
+上述功能，并非所有用户都能使用。根据实际情况分析，我们将这套系统的使用者分为普通用户和管理员两种。
+普通用户可以查看商品信息、可以搜索商品信息；只有管理员可以新增、修改、删除、上下架商品。
+下面我们将以普通用户的角度，对外暴露对应接口，来完成一些基本的测试。
+为方便封装接口返回值，我们需要定义一个统一的接口返回数据结构。
+在org.example.shop.util包下新建R.java文件，用于定义接口返回数据，编码如下：
+/**
+ * HTTP请求响应体
+ * <p>
+ * 参数含义如下： <br>
+ * 200 - 正常响应 <br>
+ * 400 - 客户端发送数据有误 <br>
+ * 500 - 服务端异常 <br>
+ * </p>
+ */
+@Data
+@AllArgsConstructor
+public class R {
+ private Integer code;
+ private String msg;
+ private Object data;
+
+ public static R ok(Object data) {
+ return new R(200, "okay", data);
+ }
+
+ public static R of(int code, String msg, Object data) {
+ return new R(code, msg, data);
+ }
+}
+该对象主要用于封装HTTP请求的返回值，里面包含三个字段：
+- code：响应代码，其中200表示成功处理请求，400表示客户端发送数据有误，500表示服务端异常；
+- msg：用来存放响应提示信息；
+- data：用来存放响应结果，它可以任意类型。
+注解@Data会自动帮当前对象生成getter和setter。
+注解@AllArgsConstructor会自动帮当前对象生成全参数的构造方法。
+11 查看商品信息测试
+查看商品信息主要指通过传入商品ID，查看该商品详情信息。
+因此我们需要构建Controller接口，用来完成该功能的测试。
+在org.example.shop.goods.controller包下新建GoodsController.java文件，初始化编码如下：
+@RestController
+@RequestMapping("/goods")
+public class GoodsController {
+ @Autowired
+ private GoodsService goodsService;
+}
+注解@RestController表示这是一个restful接口，只返回数据，无页面渲染。
+注解@RequestMapping("/goods")表示该Controller的访问URI统一前缀为/goods。
+注解@Autowired表示将商品Service对象注入到当前的Controller中。
+在当前Controller下新增查看商品信息的接口方法：
+/**
+ * 商品信息
+ *
+ * @param id 商品ID
+ * @return 固定响应体
+ */
+ @GetMapping("/get")
+ public R getGoods(@RequestParam(required = false) Integer id) {
+ if (id == null) {
+ return R.of(400, "商品ID为空", null);
+ }
+ return R.ok(goodsService.findGoodsById(id));
+ }
+注解@GetMapping("/get")指定该方法的HTTP请求方式为Get，同时与Controller类的前缀URI一并拼成了/goods/get的请求路径；
+方法接受的参数@RequestParam(required = false) Integer id表示可以从请求参数中接受一个名字为id的参数，类型是Integer，用来指代商品ID。
+至此，编码完毕，我们可以启动项目，通过浏览器访问以下URL测试查看商品信息的接口：
+localhost:8080/goods/get
+localhost:8080/goods/get?id=1
+上述两个访问路径分别会返回结果如下所示：
+ 
+ 
+由于目前系统中尚未添加任何商品信息，因此无论如何请求都会返回空值，这是正常结果。
+至此，查看商品信息接口测试成功。
+12 查询商品列表测试
+参考目前市面上比较流行的商城平台，它们在展示商品列表时一般都会提供搜索、排序等功能。接下来我们也将完成一个可以提供分页与排序的接口。
+假设该接口可以排序的字段为销量和售价。
+在GoodsController.java新增方法如下：
+/**
+ * 商品列表
+ *
+ * @param page （可选）页码，默认1
+ * @param size （可选）每页数量，默认10
+ * @param sort （可选）排序字段，可填sales、cost；填写表示倒序列表
+ * @return 固定响应体
+ */
+ @GetMapping("/list")
+ public R goodsList(@RequestParam(required = false) Integer page,
+ @RequestParam(required = false) Integer size,
+ @RequestParam(required = false) String sort,
+ @RequestParam(required = false) String color,
+ @RequestParam(required = false) String brand) {
+ if (page == null || page <= 0) {
+ page = 1;
+ }
+ if (size == null || size <= 0) {
+ size = 10;
+ }
+ Sort s = Sort.by("id").ascending();
+ if (StringUtil.notBlank(sort) && List.of("sales", "cost").contains(sort)) {
+ s = Sort.by(sort).descending();
+ }
+
+ List<ShopGood> list = null;
+
+ if (StringUtil.isBlank(color) && StringUtil.isBlank(brand)) {
+ list = goodsService.findGoodsByPage(PageRequest.of(page - 1, size, s));
+ } else {
+ if (StringUtil.notBlank(color) && StringUtil.notBlank(brand)) {
+ list = goodsService.findGoodsByPageAndColorAndBrand(color, brand, PageRequest.of(page - 1, size, s));
+ } else {
+ if (StringUtil.notBlank(color)) {
+ list = goodsService.findGoodsByPageAndColor(color, PageRequest.of(page - 1, size, s));
+ } else {
+ list = goodsService.findGoodsByPageAndBrand(brand, PageRequest.of(page - 1, size, s));
+ }
+ }
+ }
+
+ return R.ok(list);
+ }
+其中可接受的参数说明如下：
+@RequestParam(required = false) Integer page：分页起始页码
+@RequestParam(required = false) Integer size：分页时每页展示内容条数
+@RequestParam(required = false) String sort：排序字段，若有则倒序排列
+@RequestParam(required = false) String color：根据颜色查询列表
+@RequestParam(required = false) String brand：根据品牌查询列表
+以上代码中的StringUtil类是一个自定义的工具类，主要用于判断某字符串是否为空。
+我们需要在org.example.shop.util包下新建StringUtil.java文件，里面编码如下：
+public class StringUtil {
+ public static boolean isBlank(String str) {
+ return str == null || str.trim().isEmpty();
+ }
+
+ public static boolean notBlank(String str) {
+ return !isBlank(str);
+ }
+}
+完成编码后可以通过浏览器访问URL测试商品列表接口：
+localhost:8080/goods/list
+localhost:8080/goods/list?page=1&size=2
+localhost:8080/goods/list?sort=sales
+localhost:8080/goods/list?color=白色
+程序能正常响应，则表示完成测试。
+
+06-会员管理模块开发
+会员管理模块开发
+会员管理模块，也叫用户管理。这里的用户指登录使用本系统的所有用户的统称。
+除了用户信息基本的增删改查外，还需要开发用户的登录状态管理功能。
+1 用户信息管理
+在org.example.shop.sys.service包下创建UserService.java文件，初始代码如下：
+@Service
+public class UserService {
+ @Autowired
+ private ShopUserRepository userRepository;
+}
+注解@Service表示这是一个Service对象；
+注解@Autowired表示将目标对象注入到当前对象中。
+1.1 添加用户
+在UserService.java中新增以下方法，完成添加用户逻辑：
+ /**
+ * 添加用户
+ * @param user 用户对象
+ * @return 添加结果
+ */
+ public boolean saveUser(ShopUser user) {
+ user.setState(1);
+ userRepository.save(user);
+ return true;
+ }
+需要注意的是，用户表中有状态字段，因此需要将其状态设置为1（即正常状态），方可插入数据库中。
+1.2 删除用户
+在UserService.java中新增以下方法，完成删除用户逻辑：
+ /**
+ * 删除用户
+ * <p>
+ * 考虑到用户可能与购物车、订单关联，不能真的把用户删掉。
+ * 故此删除逻辑是将其状态位置0。状态字段含义如下：0-异常，1-正常。
+ * </p>
+ *
+ * @param id 用户ID
+ * @return 默认成功
+ */
+ public boolean deleteUser(int id) {
+ ShopUser user = userRepository.findById(id).orElse(new ShopUser());
+ if (user.getUserName() == null) {
+ return false;
+ }
+ user.setState(0);
+ userRepository.save(user);
+ return true;
+ }
+需要注意的是，这里是逻辑删除。考虑到该用户可能与其他数据有所关联，因此不能真的将该用户信息从数据库中删除。
+1.3 修改用户
+在UserService.java中新增以下方法，完成用户信息修改逻辑：
+ /**
+ * 修改用户信息
+ * @param user 用户信息
+ * @return 修改后的用户信息
+ */
+ public ShopUser updateUser(ShopUser user) {
+ return userRepository.save(user);
+ }
+1.4 查找用户
+查找用户的逻辑比较多，包括根据ID查找、脱敏查找、分页查找等。
+在UserService.java中新增以下方法，完成根据ID查找用户逻辑：
+ /**
+ * 查找用户
+ * @param id 用户ID
+ * @return 用户信息
+ */
+ public ShopUser findUserById(int id) {
+ return userRepository.findById(id).orElse(null);
+ }
+在UserService.java中新增以下方法，完成脱敏查找用户逻辑：
+ /**
+ * 查找用户，不带密码数据
+ * @param id 用户ID
+ * @return 用户信息
+ */
+ public ShopUser findUserSafelyById(int id) {
+ ShopUser user = userRepository.findById(id).orElse(null);
+ if (user != null) {
+ //不返回登录密码
+ user.setPassword(null);
+ }
+ return user;
+ }
+在UserService.java中新增以下方法，完成分页查找用户列表逻辑：
+ /**
+ * 分页读取所有用户列表
+ * <p>
+ * 需要注意的是,JPA分页从第0页开始
+ * </p>
+ * @param pageable 分页器
+ * @return 用户列表
+ */
+ public List<ShopUser> findUsersByPage(Pageable pageable) {
+ List<ShopUser> users = userRepository.findAll(pageable).getContent();
+ for (ShopUser u : users) {
+ u.setPassword(null);
+ }
+ return users;
+ }
+2 登录状态管理
+用户登录状态我们使用JWT的方案，即用户登录完成后生成一个标志性的Token，只需在后续的请求头中携带Token，即可被识别为同一个用户。
+为大致区分用户类型，这里假设有普通用户和管理员两种类型，我们需要一个对象区分它们。
+在org.example.shop.util包下新建Role.java文件，里面编码如下：
+public class Role {
+ public static final String User = "user";
+ public static final String Admin = "admin";
+}
+2.1 JWT能力配置
+为能够使用JWT能力，我们还需在pom.xml文件<dependencies>子标签中配置JWT相关库，如下：
+<dependency>
+ <groupId>io.jsonwebtoken</groupId>
+ <artifactId>jjwt</artifactId>
+ <version>0.9.1</version>
+ </dependency>
+ <dependency>
+ <groupId>javax.xml.bind</groupId>
+ <artifactId>jaxb-api</artifactId>
+ <version>2.3.1</version>
+ </dependency>
+在org.example.shop.util包下新建JwtUtil.java文件，里面编码如下：
+@Component
+public class JwtUtil {
+
+ private final String secret = "39c7d47a9981478298da7e1648b4b4e3"; // 私钥，用于签名JWT
+
+ public String generateToken(Map<String, Object> claims, String subject) {
+ return Jwts.builder()
+ .setClaims(claims)
+ .setSubject(subject)
+ .setIssuedAt(new Date(System.currentTimeMillis()))
+ .setExpiration(new Date(System.currentTimeMillis() + 60 * 60 * 1000)) // 1小时过期
+ .signWith(SignatureAlgorithm.HS512, secret)
+ .compact();
+ }
+
+ public String getSubject(String token) {
+ return getClaimFromToken(token, Claims::getSubject);
+ }
+
+ public Date getExpiration(String token) {
+ return getClaimFromToken(token, Claims::getExpiration);
+ }
+
+ private <T> T getClaimFromToken(String token, Function<Claims, T> claimsResolver) {
+ Claims claims = getClaims(token);
+ return claimsResolver.apply(claims);
+ }
+
+ public Claims getClaims(String token) {
+ return Jwts.parser().setSigningKey(secret).parseClaimsJws(token).getBody();
+ }
+
+ public boolean validateToken(String token, String subject) {
+ return (subject.equals(getSubject(token)) && !isExpired(token));
+ }
+
+ public boolean isExpired(String token) {
+ try {
+ Date expiration = getExpiration(token);
+ return expiration.before(new Date(System.currentTimeMillis()));
+ } catch (Exception e) {
+ // 已过期
+ return true;
+ }
+ }
+
+ public boolean validate(String token) {
+ return true;
+ }
+
+ public Claims getClaimsFromHeader(String authorization) {
+ return getClaims(authorization.substring(7));
+ }
+}
+在org.example.shop.util包下新建JwtInterceptor.java文件，用于定义SpringBoot的前置处理器，使得所有经过SpringBoot的HTTP请求搜需要经过该处理器处理，提前验证请求者的身份，编码如下：
+@Component
+public class JwtInterceptor implements HandlerInterceptor {
+ @Autowired
+ private JwtUtil jwtUtil;
+ @Autowired
+ private ObjectMapper mapper; // JSON序列化器
+
+ @Override
+ public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+ String requestTokenHeader = request.getHeader("Authorization");
+ if (requestTokenHeader != null && requestTokenHeader.startsWith("Bearer ")) {
+ String token = requestTokenHeader.substring(7);
+ if (!jwtUtil.isExpired(token)) {
+ // 管理端页面权限校验
+ String uri = request.getRequestURI();
+ if (uri.startsWith("/a/")) {
+ if (jwtUtil.validateToken(token, Role.Admin)) {
+ return true;
+ }
+ intercept(response, R.of(400, "权限不足", null));
+ return false;
+ }
+ // 普通用户页面直接放行
+ return true;
+ }
+ }
+ intercept(response, R.of(400, "Token无效", null));
+ return false;
+ }
+
+ // 响应返回
+ private void intercept(HttpServletResponse resp, Object obj) throws IOException {
+ resp.setStatus(HttpServletResponse.SC_OK);
+ resp.setHeader("Content-Type", "application/json;charset=UTF-8");
+ String rs = mapper.writeValueAsString(obj);
+ PrintWriter out = resp.getWriter();
+ out.write(rs);
+ out.flush();
+ }
+}
+最后，在org.example.shop.util包下新建JwtConfig.java文件，用来配置哪些URL请求可以跳过验证。编码如下：
+@Configuration
+public class JwtConfig implements WebMvcConfigurer {
+
+ @Autowired
+ private JwtInterceptor jwtInterceptor;
+
+ // 不做校验的URI
+ private final String[] excludePath = {
+ "/auth/login", // 用户登录
+ "/a/auth/login", // 管理员登录
+ "/user/add", // 用户注册
+ "/file/**.**" // 上传的图片文件
+ };
+
+ @Override
+ public void addInterceptors(InterceptorRegistry registry) {
+ registry.addInterceptor(jwtInterceptor)
+ .addPathPatterns("/**") // 拦截所有请求
+ .excludePathPatterns(excludePath) // 排除某些路径
+ .order(1); // 指定拦截器的顺序
+ }
+}
+3 用户登录逻辑
+回到org.example.shop.sys.service包中，新建AuthService.java文件，用来处理用户的登录退出流程。代码如下：
+@Service
+public class AuthService {
+ @Autowired
+ private ShopUserRepository userRepository;
+ /**
+ * 用户登录
+ * @param username 账号
+ * @param password 密码
+ * @return 用户信息
+ */
+ public ShopUser login(String username, String password) {
+ List<ShopUser> users = userRepository.findByUsernameAndPassword(username, password);
+ if (!users.isEmpty() && users.get(0).getState() == 1) {
+ return users.get(0);
+ }
+ return null;
+ }
+ /**
+ * 用户注销登录
+ * @param username 账号
+ * @return 注销结果
+ */
+ public boolean logout(String username) {
+ return true;
+ }
+ /**
+ * 用户注册
+ * @param username 账号
+ * @param password 密码
+ * @return 注册结果
+ */
+ public boolean register(String username, String password) {
+ List<ShopUser> userByUsername = userRepository.findByUsername(username);
+ if (!userByUsername.isEmpty()) {
+ // 登录账号已存在
+ return false;
+ }
+ ShopUser user = new ShopUser();
+ user.setUsername(username);
+ user.setPassword(password);
+ userRepository.save(user);
+ return true;
+ }
+}
+需要注意的是，其中userRepository.findByUsernameAndPassword(username, password)方法和userRepository.findByUsername(username)方法需要在ShopUserRepository中额外声明，声明代码略。
+4 测试接口
+4.1 用户信息接口
+到org.example.shop.sys.controller包下新建UserController.java文件，对外暴露用户信息相关接口。由于用户信息管理属于平台管理员的功能，此处我们仅实现用户注册（即添加用户）接口即可，代码如下：
+@RestController
+@RequestMapping("/user")
+public class UserController {
+ @Autowired
+ private UserService userService;
+ /**
+ * 用户注册
+ * @param params 注册所需的username、password、confirmPassword参数
+ * @return 固定响应体
+ */
+ @PostMapping("/add")
+ public R register(@RequestBody Map<String, String> params) {
+ String username = params.get("username");
+ String password = params.get("password");
+ String nickname = params.get("nickname");
+ String confirmPassword = params.get("confirmPassword");
+ if (username == null || password == null || confirmPassword == null) {
+ return R.of(400, "参数不全", null);
+ }
+ if (!password.equals(confirmPassword)) {
+ return R.of(400, "两次密码不一致", null);
+ }
+ ShopUser user = new ShopUser();
+ user.setUsername(username);
+ user.setPassword(password);
+ user.setNickname(nickname == null ? "系统用户" : nickname);
+ userService.saveUser(user);
+ return R.ok(null);
+ }
+}
+随后启动项目，通过Apifox组织发起Post请求，传入username、password、nickname、confirmPassword四个参数，尝试注册一个新用户。
+4.2 登录状态接口
+到org.example.shop.sys.controller包下新建AuthController.java文件，实现用户登录状态接口。编码如下：
+@RestController
+@RequestMapping("/auth")
+public class AuthController {
+ @Autowired
+ private AuthService authService;
+ @Autowired
+ private JwtUtil jwtUtil;
+
+ @PostMapping("/login")
+ public R login(@RequestBody Map<String, String> params) {
+ String username = params.get("username");
+ String password = params.get("password");
+ if (username == null || password == null) {
+ return R.of(400, "账号或密码不能为空", null);
+ }
+ ShopUser user = authService.login(username, password);
+ if (user != null) {
+ Map<String, Object> map = new HashMap<>();
+ map.put("id", user.getId());
+ map.put("username", user.getUsername());
+ String token = jwtUtil.generateToken(map, Role.User);
+ return R.ok(token);
+ } else {
+ return R.of(400, "账号密码不正确", null);
+ }
+ }
+
+ @RequestMapping("/logout")
+ public R logout() {
+ return R.ok(null);
+ }
+
+ @RequestMapping("/refresh")
+ public R refreshJwt(@RequestHeader("Authorization") String token) {
+ Claims claims = jwtUtil.getClaimsFromHeader(token);
+ String newToken = jwtUtil.generateToken(claims, Role.User);
+ return R.ok(newToken);
+ }
+}
+其中，由于JWT的Token每次生成都自带有效时间，因此退出登录无需额外操作，只需前端清除掉记录的Token即可。
+而refreshJwt接口，主要是为即将到期的Token重新生成Token，以达到延长有效期的目的。
+最后，通过Apifox工具测试登录和刷新Token接口，测试过程略。
+
+07-购物车模块开发
+购物车模块开发
+本系统中设定，用户需要将商品添加到购物车后方可下单。
+购物车模块的开发难点在于，它与商品模块和用户模块都有关联。
+1 业务逻辑
+在org.example.shop.goods.service下新建CartService.java文件，初始编码如下：
+@Service
+public class CartService {
+ @Autowired
+ private ShopCartRepository cartRepository;
+}
+新增根据用户查找购物车记录功能，在CartService.java中新增以下方法：
+ /**
+ * 通过用户ID获取用户购物车列表
+ * @param userId 用户ID
+ * @return 购物车列表
+ */
+ public List<ShopCart> findByUserId(Integer userId) {
+ List<ShopCart> list = cartRepository.findByUserId(userId);
+ for (ShopCart s : list) {
+ s.getUser().setPassword(null);
+ }
+ return list;
+ }
+其中cartRepository.findByUserId(userId)方法需要在ShopCartRepository中定义声明，声明过程略。
+新增删除购物车条目功能，在CartService.java中新增以下方法：
+ /**
+ * 删除购物车选项
+ * @param ids 选项ID
+ * @param userId 用户ID
+ * @return 结果
+ */
+ public boolean deleteCart(List<Integer> ids, Integer userId) {
+ List<ShopCart> byUserId = cartRepository.findByUserId(userId);
+ List<Integer> cartIdsByUserId = new ArrayList<>();
+ byUserId.forEach(sc -> cartIdsByUserId.add(sc.getId()));
+ List<Integer> finalList = ids.stream().filter(cartIdsByUserId::contains).collect(Collectors.toList());
+ cartRepository.deleteAllById(finalList);
+ return true;
+ }
+新增添加购物车条目功能，在CartService.java中新增方法如下：
+ /**
+ * 添加购物车记录
+ *
+ * @param cart 购物车条目
+ * @return 操作结果
+ */
+ public boolean addCart(ShopCart cart) {
+ ShopCart log = cartRepository.findByUserIdAndGoodsId(cart.geUser().getId(), cart.getGoods().getId());
+ if (log != null && log.getId() != null) {
+ log.setGoodsNumber(log.getGoodsNumber() + 1);
+ cart = log;
+ }
+ cartRepository.save(cart);
+ return true;
+ }
+其中cartRepository.findByUserIdAndGoodsId()方法需要在ShopCartRepository中定义声明，声明过程略。
+新增购物车条目更新功能，在CartService.java中新增方法如下：
+ /**
+ * 修改购物车记录
+ *
+ * @param cart 购物车条目
+ * @return 操作结果
+ */
+ public boolean saveCart(ShopCart cart) {
+ Optional<ShopCart> byId = cartRepository.findById(cart.getId());
+ if (byId.isPresent()) {
+ if (cart.getGoodsNumber() < 1) {
+ cartRepository.delete(cart);
+ } else {
+ cartRepository.save(cart);
+ }
+ return true;
+ } else {
+ return false;
+ }
+ }
+2 接口开发
+在org.example.shop.goods.controller下新建CartController.java文件，初始编码如下：
+@RestController
+@RequestMapping("/cart")
+public class CartController {
+ @Autowired
+ private CartService cartService;
+ @Autowired
+ private JwtUtil jwtUtil;
+}
+这里注入了两个对象，cartService主要用于处理购物车信息，jwtUtil主要用于解析当前请求用户，以便知道是谁在操作自己的购物车。
+在CartController.java中新增查询用户购物车列表的接口，编码如下：
+ /**
+ * 用户购物车列表
+ *
+ * @param token 用户登录信息
+ * @return 固定响应体
+ */
+ @GetMapping("/list")
+ public R list(@RequestHeader("Authorization") String token) {
+ Claims claims = jwtUtil.getClaimsFromHeader(token);
+ List<ShopCart> carts = cartService.findByUserId(claims.get("id", Integer.class));
+ return R.ok(carts);
+ }
+在CartController.java中新增删除购物车信息的接口，编码如下：
+ /**
+ * 删除购物车信息
+ *
+ * @param ids 条目ID（批量）
+ * @return 固定响应体
+ */
+ @PostMapping("/delete")
+ public R delete(@RequestBody List<Integer> ids, @RequestHeader("Authorization") String token) {
+ if (ids == null || ids.isEmpty()) {
+ return R.of(400, "参数不正确", null);
+ }
+ cartService.deleteCart(ids, jwtUtil.getClaimsFromHeader(token).get("id", Integer.class));
+ return R.ok(null);
+ }
+在CartController.java中新增添加购物车条目的接口，编码如下：
+ /**
+ * 添加购物车条目
+ * @param vo 提供goodsId信息
+ * @param token 请求头的Token信息
+ * @return 固定响应体
+ */
+ @PostMapping("/add")
+ public R add(@RequestBody CartVO vo, @RequestHeader("Authorization") String token) {
+ if (vo == null || vo.getGoodsId() == null) {
+ return R.of(400, "参数有误", null);
+ }
+
+ ShopCart cart = new ShopCart();
+ cart.setGoodsNumber(1);
+ ShopGood goods = new ShopGood();
+ goods.setId(vo.getGoodsId());
+ cart.setGoods(goods);
+
+ ShopUser user = new ShopUser();
+ user.setId(jwtUtil.getClaimsFromHeader(token).get("id", Integer.class));
+ cart.setUser(user);
+
+ cartService.addCart(cart);
+ return R.ok(null);
+ }
+需要注意的是，@RequestBody 注解表示该接口会读取请求体中的对象信息，并将信息序列化后存放在VO对象中。
+CartVO对象的定义如下：
+在org.example.shop.goods.vo包下新建CartVO.java文件，编码如下：
+@Data
+public class CartVO {
+ private Integer id;
+ private Integer goodsNumber;
+ private Integer goodsId;
+ private Integer userId;
+}
+在CartController.java中新增修改购物车条目的接口，编码如下：
+ /**
+ * 修改购物车条目信息
+ * @param vo 条目概要信息
+ * @param token 请求头Token信息
+ * @return 固定响应体
+ */
+ @PostMapping("/update")
+ public R update(@RequestBody CartVO vo, @RequestHeader("Authorization") String token) {
+ if (vo == null) {
+ return R.of(400, "参数不正确", null);
+ }
+ ShopCart cart = new ShopCart();
+ cart.setId(vo.getId());
+ cart.setGoodsNumber(vo.getGoodsNumber());
+
+ ShopGood goods = new ShopGood();
+ goods.setId(vo.getGoodsId());
+ cart.setGoods(goods);
+
+ ShopUser user = new ShopUser();
+ user.setId(jwtUtil.getClaimsFromHeader(token).get("id", Integer.class));
+ cart.setUser(user);
+
+ return cartService.saveCart(cart)
+ ? R.ok(null)
+ : R.of(400, "未能成功", null);
+ }
+至此，购物车模块的业务逻辑和接口开发代码全部完成。
+3 测试
+购物车模块涉及JWT令牌的解析和验证，因此需要借助Apifox等工具进行测试。
+测试过程将现场演示。
+08-订单模块开发
+订单模块开发
+订单模块是商城系统的核心，主要涵盖订单信息的增删改查。
+其中新增订单、查看个人订单、查看个人订单列表等只能用用户来操作；删除订单、查看所有订单只能由管理员操作。
+1 业务逻辑开发
+在org.example.shop.order.service包下新建OrderService.java文件，初始编码如下：
+@Service
+public class OrderService {
+ @Autowired
+ private ShopOrderRepository orderRepository;
+ @Autowired
+ private ShopOrderDetailRepository orderDetailRepository;
+ @Autowired
+ private ShopGoodRepository goodRepository;
+ @Autowired
+ private ShopCartRepository cartRepository;
+}
+订单模块涉及多个表的数据的整合与读写，因此需要注入订单DAO对象（包括订单概要、订单详情两个DAO）、商品DAO对象、购物车DAO对象（系统设定只有加入购物车的商品才能下单）。
+新增下单功能，在OrderService.java中新增以下方法：
+ /**
+ * 将购物车内容添加至订单
+ * @param userId 用户ID
+ * @param _cartIds 购物车条目ID列表
+ * @return 结果
+ */
+ public boolean addOrder(Integer userId, Iterable<Integer> _cartIds) {
+ // 筛选指定用户关联的购物车条目
+ List<ShopCart> logCarts = cartRepository.findAllById(_cartIds);
+ List<ShopCart> carts = logCarts.stream().filter(c -> userId.equals(c.getUser().getId())).toList();
+ if (carts.isEmpty()) {return false;}
+ // 计算总价
+ double totalPrice = carts.stream().mapToDouble(c -> c.getGoodsNumber() * c.getGoods().getCost()).sum();
+ ShopUser user = new ShopUser();
+ user.setId(userId);
+ // 保存订单信息
+ ShopOrder order = new ShopOrder();
+ order.setUser(user);
+ order.setCost(totalPrice);
+ order.setState(1);
+ order.setCreateTime(Instant.now());
+ ShopOrder o = orderRepository.save(order);
+ // 保存订单详情信息
+ List<ShopOrderDetail> orderDetailList = new ArrayList<>(carts.size());
+ for (ShopCart c : carts) {
+ ShopOrderDetail orderDetail = new ShopOrderDetail();
+ orderDetail.setOrder(o);
+ orderDetail.setGoodsNumber(c.getGoodsNumber());
+ orderDetail.setGoods(c.getGoods());
+ orderDetailList.add(orderDetail);
+ }
+ orderDetailRepository.saveAll(orderDetailList);
+ // 更新销量
+ List<Integer> goodIds = carts.stream().map(c -> c.getGoods().getId()).toList();
+ List<Integer> goodNumbers = carts.stream().map(ShopCart::getGoodsNumber).toList();
+ List<ShopGood> goodList = goodRepository.findAllById(goodIds);
+ for (int i = 0; i < goodList.size(); i++) {
+ ShopGood g = goodList.get(i);
+ g.setSales(g.getSales() + goodNumbers.get(i));
+ }
+ goodRepository.saveAll(goodList);
+ // 删除购物车记录
+ cartRepository.deleteAll(carts);
+ return true;
+ }
+上述代码主要实现从购物车筛选出下单商品——计算总价——保存订单信息——更新商品销量——删除购物车记录的流程。
+新增查看全部订单功能，在OrderService.java中添加以下方法：
+ /**
+ * 全部订单列表
+ * @param pageRequest 分页器
+ * @return 订单列表
+ */
+ public List<ShopOrder> orderListAll(PageRequest pageRequest) {
+ List<ShopOrder> list = orderRepository.findAll(pageRequest).getContent();
+ if (!list.isEmpty()) {
+ for (ShopOrder o : list) {
+ o.getUser().setPassword(null);
+ }
+ }
+ return list;
+ }
+添加根据用户ID查找关联订单功能，在OrderService.java中新增以下方法：
+ /**
+ * 根据用户ID查找订单列表
+ * @param userId 用户ID
+ * @param pageRequest 分页器
+ * @return 订单列表
+ */
+ public List<ShopOrder> orderListByUserId(Integer userId, PageRequest pageRequest) {
+ List<ShopOrder> list = orderRepository.findAllByUserId(userId, pageRequest).getContent();
+ if (!list.isEmpty()) {
+ for (ShopOrder o : list) {
+ o.getUser().setPassword(null);
+ }
+ }
+ return list;
+ }
+需要注意的是，DAO操作对象中的orderRepository.findAllByUserId方法需要额外声明，声明代码略。
+新增根据订单ID查看订单详情，在OrderService.java中新增以下方法：
+ /**
+ * 订单详情
+ * @param orderId 订单ID
+ * @return 订单详情
+ */
+ public ShopOrder findOrderById(Integer orderId) {
+ ShopOrder order = orderRepository.findById(orderId).orElse(new ShopOrder());
+ if (order.getId() != null) {
+ order.setOrderDetails(orderDetailRepository.findAllByOrderId(order.getId()));
+ }
+ return order;
+ }
+需要注意的是，orderDetailRepository.findAllByOrderId需要在OrderDetailRepository对象中显式声明，声明代码略。
+新增根据用户ID和订单ID查找订单信息功能，在OrderService.java中新增以下方法：
+ public ShopOrder findOrderByIdAndUserId(Integer orderId, Integer userId) {
+ ShopOrder order = orderRepository.findById(orderId).orElse(new ShopOrder());
+ if (order.getId() != null && userId.equals(order.getUser().getId())) {
+ List<ShopOrderDetail> details = orderDetailRepository.findAllByOrderId(order.getId());
+ order.setOrderDetails(details);
+ order.getUser().setPassword(null);
+ }
+ return order;
+ }
+2 接口开发
+在org.example.shop.order.controller包下新建OrderController.java文件，初始化编码如下：
+@RestController
+@RequestMapping("/order")
+public class OrderController {
+ @Autowired
+ private OrderService orderService;
+ @Autowired
+ private JwtUtil jwtUtil;
+}
+在OrderController.java中新增个人订单列表接口，新增方法如下：
+ @GetMapping("/list")
+ public R list(@RequestParam(required = false) Integer page,
+ @RequestParam(required = false) Integer size,
+ @RequestHeader("Authorization") String token) {
+ if (page == null || page <= 0) {
+ page = 1;
+ }
+ if (size == null || size <= 0) {
+ size = 10;
+ }
+ List<ShopOrder> orders = orderService.orderListByUserId(
+ jwtUtil.getClaimsFromHeader(token).get("id", Integer.class),
+ PageRequest.of(page - 1, size, Sort.Direction.DESC, "id")
+ );
+ return R.ok(orders);
+ }
+在OrderController.java中新增获取个人订单信息详情接口，新增方法如下：
+ @GetMapping("/get")
+ public R get(@RequestParam(required = false) Integer id,
+ @RequestHeader("Authorization") String token) {
+ if (id == null || id <= 0) {
+ return R.of(400, "订单ID无效", null);
+ }
+ ShopOrder order = orderService.findOrderByIdAndUserId(
+ id,
+ jwtUtil.getClaimsFromHeader(token).get("id", Integer.class)
+ );
+ return R.ok(order);
+ }
+在OrderController.java中新增下单接口，新增方法如下：
+ @PostMapping("/add")
+ public R add(@RequestBody List<Integer> cartIds,
+ @RequestHeader("Authorization") String token) {
+ if (cartIds == null || cartIds.isEmpty()) {
+ return R.of(400, "参数不全", null);
+ }
+ boolean ok = orderService.addOrder(
+ jwtUtil.getClaimsFromHeader(token).get("id", Integer.class),
+ cartIds
+ );
+ if (ok) {
+ return R.ok(null);
+ } else {
+ return R.of(500, "下单失败", null);
+ }
+ }
+至此，订单模块的业务逻辑开发与接口开发完毕。
+3 测试
+订单模块与当前登录用户的JWT令牌管理，需要解析JWT令牌获取登录用户信息，因此需要借助Apifox一类的工具进行接口测试。
+测试过程随堂演示。
+09-管理员模块开发
+管理员模块开发
+管理员模块主要提供一些可以用于管理数据的功能，区别与普通用户的商城浏览、添加购物车、下单等。
+管理员可以上下架商品，可以查看所有人的订单列表，可以添加用户或者删除用户等。
+需要注意的是，管理员模块所用的功能在前面的开发中各模块的Service层已经实现，此处只需给管理员接口开发访问接口即可。
+1 管理员登录状态
+1.1 路由定义
+在org.example.shop.admin包下新建AuthAdminController.java文件，初始编码如下：
+@RestController
+@RequestMapping("/a/auth")
+public class AuthAdminController {
+ @Autowired
+ private AuthService authService;
+ @Autowired
+ private JwtUtil jwtUtil;
+}
+需要注意该Controller的前缀路由多了个/a，用于区分普通用户的接口路由。
+在AuthAdminController.java中新增管理员登录方法，如下：
+ @PostMapping("/login")
+ public R login(@RequestBody Map<String, String> params) {
+ String username = params.get("username");
+ String password = params.get("password");
+ if (username == null || password == null) {
+ return R.of(400, "账号或密码不能为空", null);
+ }
+ ShopUser user = authService.login(username, password);
+ if (user != null) {
+ Map<String, Object> map = new HashMap<>();
+ map.put("id", user.getId());
+ map.put("username", user.getUsername());
+ String token = jwtUtil.generateToken(map, Role.Admin);
+ return R.ok(token);
+ } else {
+ return R.of(400, "账号密码不正确", null);
+ }
+ }
+在AuthAdminController.java中新增管理员退出登录方法，如下：
+ @RequestMapping("/logout")
+ public R logout() {
+ return R.ok(null);
+ }
+因为JWT会自动过期，因此退出登录无需做任何操作。
+在AuthAdminController.java中新增刷新JWT令牌方法，如下：
+ @RequestMapping("/refresh")
+ public R refreshJwt(@RequestHeader("Authorization") String token) {
+ Claims claims = jwtUtil.getClaimsFromHeader(token);
+ String newToken = jwtUtil.generateToken(claims, Role.Admin);
+ return R.ok(newToken);
+ }
+1.2 测试
+通过Apifox等接口测试工具，通过传入账号密码实现登录，并查看返回的JWT Token值；
+随后通过设置请求头的Token值分别测试所有接口。
+2 管理商品
+2.1 路由定义
+在org.example.shop.admin包下新建GoodsAdminController.java文件，初始编码如下：
+@RestController
+@RequestMapping("/a/goods")
+public class GoodsAdminController {
+ @Autowired
+ private GoodsService goodsService;
+}
+在GoodsAdminController.java中新增商品列表方法，如下：
+ /**
+ * 商品列表
+ *
+ * @param page （可选）页码，默认1
+ * @param size （可选）每页数量，默认10
+ * @param sort （可选）排序字段，可填sales、cost；填写表示倒序列表
+ * @return 固定响应体
+ */
+ @GetMapping("/list")
+ public R goodsList(@RequestParam(required = false) Integer page,
+ @RequestParam(required = false) Integer size,
+ @RequestParam(required = false) String sort) {
+ if (page == null || page <= 0) {
+ page = 1;
+ }
+ if (size == null || size <= 0) {
+ size = 10;
+ }
+ Sort s = Sort.by("id").descending();
+ if (sort != null) {
+ s = Sort.by(sort).descending();
+ }
+ return R.ok(goodsService.findGoodsByPage(PageRequest.of(page - 1, size, s)));
+ }
+在GoodsAdminController.java中新增查看商品信息方法，如下：
+ /**
+ * 商品信息
+ *
+ * @param id 商品ID
+ * @return 固定响应体
+ */
+ @GetMapping("/get")
+ public R getGoods(@RequestParam Integer id) {
+ if (id == null) {
+ return R.of(400, "商品ID为空", null);
+ }
+ return R.ok(goodsService.findGoodsById(id));
+ }
+在GoodsAdminController.java中新增添加商品方法，如下：
+ /**
+ * 添加商品
+ *
+ * @param goods 商品信息
+ * @return 固定响应体
+ */
+ @PostMapping("/add")
+ public R addGoods(@RequestBody ShopGood goods) {
+ if (goods == null) {
+ return R.of(400, "参数不全", null);
+ }
+ goodsService.saveGood(goods);
+ return R.ok(null);
+ }
+需要注意的是，新增商品需要填写其封面图片和详情图片，我们在后续还需要单独编写一个文件上传的Controller。
+在GoodsAdminController.java中新增更新商品方法，如下：
+ /**
+ * 更新商品
+ *
+ * @param goods 商品信息
+ * @return 固定响应体
+ */
+ @PostMapping("/update")
+ public R updateGoods(@RequestBody ShopGood goods) {
+ if (goods == null) {
+ return R.of(400, "参数不全", null);
+ }
+ goodsService.updateGood(goods);
+ return R.ok(null);
+ }
+在GoodsAdminController.java中新增删除商品方法，如下：
+ /**
+ * 删除商品
+ *
+ * @param good 商品信息，只需要传ID
+ * @return 固定响应体
+ */
+ @PostMapping("/delete")
+ public R deleteGoods(@RequestBody ShopGood good) {
+ if (good == null || good.getId() == null) {
+ return R.of(400, "未指定商品", null);
+ }
+ goodsService.deleteGood(good.getId());
+ return R.ok(null);
+ }
+在GoodsAdminController.java中新增商品上下架方法，如下：
+ /**
+ * 商品上下架操作
+ * @param goods 提供商品id和state上下架信息。1-上架，0-下架
+ * @return 固定响应体
+ */
+ @PostMapping("/change")
+ public R changeGoodsState(@RequestBody ShopGood goods) {
+ if (goods == null) {
+ return R.of(400, "参数不全", null);
+ }
+ goodsService.changeGoodState(goods);
+ return R.ok(null);
+ }
+2.2 测试
+通过Apifox等接口测试工具，通过传入账号密码实现登录，并查看返回的JWT Token值；
+随后通过设置请求头的Token值分别测试所有接口。
+3 文件上传下载
+3.1 路由定义
+考虑到商品信息中涉及到封面图以及详情图，我们需要定义一个Controller用于图片的上传和阅览。每次成功上传时都会返回可供阅览的URI。
+在org.example.shop.sys.controller包下新建ImageController.java文件，初始编码如下：
+@RestController
+@RequestMapping("/file")
+public class ImageController {
+}
+它不需要注入任何Service，因为它只需完成图片的上传和阅览。
+在ImageController.java中新增路径变量，用于约定文件上传后存储的位置，如下：
+ /**
+ * 上传文件存放目录（相对于项目工作目录而言）
+ */
+ private static final String fileDir = "file";
+ private static final String dest = System.getProperty("user.dir") + File.separator + fileDir;
+在ImageController.java中新增文件上传方法，如下：
+ /**
+     * 文件上传
+     *
+     * @param file 文件
+     * @return 上传成果会返回该文件的访问相对路径
+     */
+    @PostMapping("/upload")
+    public R upload(@RequestParam("file") MultipartFile file) {
+        if (file.isEmpty()) {
+            return R.of(400, "文件为空", null);
+        }
+        if (file.getContentType() != null && !file.getContentType().startsWith("image")) {
+            return R.of(400, "只允许上传图片", null);
+        }
+        // 获取文件名和后缀
+        String fileName = file.getOriginalFilename();
+        if (fileName == null || fileName.isEmpty()) {
+            return R.of(400, "文件名为空", null);
+        }
+        String fileSuffix = fileName.substring(fileName.lastIndexOf("."));
+        String destFileName = UUID.randomUUID() + fileSuffix;
+        String destPath = dest + File.separator + destFileName;
+        File destFile = new File(destPath);
+        if (!destFile.getParentFile().exists()) {
+            destFile.getParentFile().mkdirs();
+        }
+        try {
+            // 该方法需使用绝对路径
+            file.transferTo(destFile);
+        } catch (IOException e) {
+            return R.of(500, e.getMessage(), null);
+        }
+        return R.ok(fileDir + "/" + destFileName);
+    }
+
+在ImageController.java中新增文件阅览方法，如下：
+@GetMapping("/{filename}")
+    public ResponseEntity<byte[]> download(@PathVariable String filename) {
+        File file = new File(dest + File.separator + filename);
+        if (file.exists() && !file.isDirectory()) {
+            try (FileInputStream inputStream = new FileInputStream(file)) {
+                byte[] fileBytes = new byte[(int) file.length()];
+                inputStream.read(fileBytes);
+                return ResponseEntity.ok().contentType(MediaType.valueOf("image/jpeg")).body(fileBytes);
+            } catch (IOException e) {
+                return ResponseEntity.internalServerError().body(null);
+            }
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+3.2 测试
+通过Apifox等接口测试工具分别测试所有接口。
+4 管理订单
+管理员可以查看所有订单。
+4.1 路由定义
+在org.example.shop.admin包下新建OrderAdminController.java文件，初始编码如下：
+@RestController
+@RequestMapping("/a/order")
+public class OrderAdminController {
+ @Autowired
+ private OrderService orderService;
+}
+在OrderAdminController.java中新增查看所有订单方法，如下：
+ @GetMapping("/list")
+ public R list(@RequestParam(required = false) Integer page,
+ @RequestParam(required = false) Integer size) {
+ if (page == null || page <= 0) {
+ page = 1;
+ }
+ if (size == null || size <= 0) {
+ size = 10;
+ }
+ List<ShopOrder> orders = orderService.orderListAll(PageRequest.of(page-1, size));
+ return R.ok(orders);
+ }
+4.2 测试
+通过Apifox等接口测试工具，通过传入账号密码实现登录，并查看返回的JWT Token值；
+随后通过设置请求头的Token值分别测试所有接口。
+5 管理用户
+5.1 路由定义
+在org.example.shop.admin包下新建UserAdminController.java文件，初始编码如下：
+@RestController
+@RequestMapping("/a/user")
+public class UserAdminController {
+ @Autowired
+ private UserService userService;
+}
+在UserAdminController.java中新增获取单个用户信息的方法，如下：
+ /**
+ * 获取单个用户信息
+ * @param id 用户ID
+ * @return 固定响应体
+ */
+ @GetMapping("/get")
+ public R getUser(@RequestParam("id") Integer id) {
+ if (id == null) {
+ return R.of(400, "用户ID为空", null);
+ }
+ return R.ok(userService.findUserSafelyById(id));
+ }
+在UserAdminController.java中新增查看用户列表的方法，如下：
+ /**
+ * 用户列表
+ * @param page 页码
+ * @param size 每页数量
+ * @return 固定响应体
+ */
+ @GetMapping("/list")
+ public R userList(@RequestParam(required = false) Integer page,
+ @RequestParam(required = false) Integer size) {
+ if (page == null || page <= 0) {
+ page = 1;
+ }
+ if (size == null || size <= 0) {
+ size = 10;
+ }
+ // JPA分页从0开始；用户习惯分页从1开始，此处做了个-1转换。前端传入正常页数即可。
+ return R.ok(userService.findUsersByPage(PageRequest.of(page - 1, size)));
+ }
+在UserAdminController.java中新增添加管理员的方法，如下：
+ /**
+ * 管理员注册/添加
+ * @param params 注册所需的username、password、confirmPassword参数
+ * @return 固定响应体
+ */
+ @PostMapping("/add")
+ public R register(@RequestBody Map<String, String> params) {
+ String username = params.get("username");
+ String password = params.get("password");
+ String nickname = params.get("nickname");
+ String confirmPassword = params.get("confirmPassword");
+ if (username == null || password == null || confirmPassword == null) {
+ return R.of(400, "参数不全", null);
+ }
+ if (!password.equals(confirmPassword)) {
+ return R.of(400, "两次密码不一致", null);
+ }
+
+ ShopUser user = new ShopUser();
+ user.setUsername(username);
+ user.setPassword(password);
+ user.setNickname(nickname == null ? "管理员" : nickname);
+ userService.saveUser(user);
+ return R.ok(null);
+ }
+在UserAdminController.java中新增更新用户的方法，如下：
+/**
+ * 更新用户信息
+ * @param vo 提供用户信息中的password、nickname数据
+ * @return 固定响应体
+ */
+@PostMapping("/update")
+public R updateUser(@RequestBody UpdateUserVO vo) {
+    Integer id = vo.getId();
+    if (id == null) {
+        return R.of(400, "用户ID为空", null);
+    }
+
+    ShopUser user = userService.findUserById(id);
+    if (vo.getPassword() != null) {
+        user.setPassword(vo.getPassword());
+    }
+    if (vo.getNickname() != null) {
+        user.setNickname(vo.getNickname());
+    }
+    userService.updateUser(user);
+    return R.ok(null);
+}
+
+与更新用户信息接口对应的VO对象如下：
+@Data
+public class UpdateUserVO {
+    private Integer id;
+    private String password;
+    private String nickname;
+}
+
+在UserAdminController.java中新增删除用户的方法，如下：
+ /**
+ * 删除用户
+ * @param params 用户的id参数
+ * @return 固定响应体
+ */
+ @PostMapping("/delete")
+ public R deleteUser(@RequestBody Map<String, Integer> params) {
+ Integer id = params.get("id");
+ return userService.deleteUser(id)
+ ? R.ok(null)
+ : R.of(400, "用户不存在", null);
+ }
+5.2 测试
+通过Apifox等接口测试工具，通过传入账号密码实现登录，并查看返回的JWT Token值；
+随后通过设置请求头的Token值分别测试所有接口。
+6 开启跨域访问
+正常来说，SpringBoot应用不允许跨域访问，因此我们需要定义一个跨域配置，允许其接口被跨域访问。
+在org.example.shop.util包下新建CorsConfig.java文件，编码如下：
+/**
+ * 全局配置允许跨域访问本项目
+ */
+@Configuration
+public class CorsConfig implements WebMvcConfigurer {
+ @Override
+ public void addCorsMappings(CorsRegistry registry) {
+ registry.addMapping("/**")
+ .allowedOriginPatterns("*")
+ .allowedMethods("*")
+ .allowedHeaders("*")
+ .allowCredentials(true)
+ .maxAge(3600);
+ }
+}
+
+
+

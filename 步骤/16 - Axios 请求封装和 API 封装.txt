@@ -1,0 +1,161 @@
+16 - Axios 请求封装和 API 封装
+
+一、Axios 请求封装
+
+1. 介绍
+
+在 Vue2 项目中，Axios 是一个流行的用于浏览器和 Node.js 的 HTTP 客户端，可以方便地进行网络请求。本实验手册将详细介绍如何在 Vue2 项目中创建和使用 Axios 进行网络请求，并进行请求和响应的拦截处理，包括步骤和开发思路。
+
+2. 开发步骤
+
+1. 确保 Axios 是否在项目中正确安装：没有安装就在项目的根目录下，打开终端并运行以下命令安装 Axios：
+npm install axios --save
+
+2. 创建 service 文件夹：在项目的 src 目录下，创建一个名为 service 的文件夹。
+3. 创建 request.js 文件：在 service 文件夹下，创建一个名为 request.js 的文件。
+4. 引入依赖：在 request.js 文件中，引入 Axios、项目中的 Vuex store 以及项目的环境配置文件。
+import axios from 'axios';
+import store from '../store';
+import config from '../config/index.js'; // 引入环境配置文件
+
+5. 设置 Axios 默认请求头和跨域配置：
+axios.defaults.headers.post['Content-Type'] = 'application/json'; // 跨域设置
+axios.defaults.withCredentials = true;
+// 这里设置了 POST 请求的默认请求头为 application/json，并设置了跨域请求时携带凭证（cookies 等）。
+
+6. 创建 Axios 实例并设置基础 URL 和请求超时时间：
+// 创建 axios 实例
+const service = axios.create({
+  baseURL: config.baseurl, // api 的 base_url
+  timeout: 5000, // 请求超时时间
+});
+
+7. 配置请求拦截器：
+// 请求拦截器
+service.interceptors.request.use(
+  config => {
+    // 可以在这里添加请求头等信息
+    if (store.state.token) {
+      config.headers['Authorization'] = `Bearer ${store.state.token}`;
+    }
+    return config;
+  },
+  error => {
+    // 请求错误处理
+    console.log(error); // for debug
+    return Promise.reject(error);
+  }
+);
+
+• 在请求拦截器中，如果 Vuex store 中有存储的 token，则在请求头中添加 Authorization 字段，携带 token。如果请求发生错误，则打印错误信息并返回被拒绝的 Promise。
+
+8. 配置响应拦截器：
+// 响应拦截器
+service.interceptors.response.use(
+  response => {
+    if (response.status === 200) {
+      return Promise.resolve(response);
+    } else {
+      return Promise.reject(response);
+    }
+  },
+  error => {
+    console.log(error); // 打印错误信息
+    return Promise.reject(error);
+  }
+);
+
+• 在响应拦截器中，如果响应状态码为 200，则返回一个被解决的 Promise，否则返回一个被拒绝的 Promise。如果响应发生错误，则打印错误信息并返回一个被拒绝的 Promise。
+
+9. 封装 GET 和 POST 方法：
+// 封装 get 方法
+export function get(url, params) {
+  return new Promise((resolve, reject) => {
+    service
+      .get(url, {
+        params: params,
+      })
+      .then((res) => {
+        resolve(res.data);
+      })
+      .catch((err) => {
+        reject(err.data);
+      });
+  });
+}
+
+// 封装 post 方法
+export function post(url, data) {
+  return new Promise((resolve, reject) => {
+    service.post(url, data)
+      .then((res) => {
+        resolve(res.data);
+      })
+      .catch((err) => {
+        reject(err.data);
+      });
+  });
+}
+
+• 这两个方法分别用于发送 GET 和 POST 请求。
+
+二、API 封装
+
+1. 创建 api.js 文件：在 service 文件夹下，创建一个名为 api.js 的文件。
+2. 导入 request 模块：在 api.js 文件中，导入前面封装好的 request 请求模块。
+import { get, post } from './request' // 导入统一封装好的请求模块
+
+3. 封装商城管理端接口：在 api.js 文件中，写入商城管理端在服务端定义好的接口路由并导出，代码如下：
+// 商城管理端
+// 用户登录
+export const login = data => post('/a/auth/login', data);
+// 注销登录
+export const logout = data => post('/a/auth/logout', data);
+// 用户管理
+// 添加用户
+export const adduser = data => post('/a/user/add', data);
+// 修改用户
+export const updateuser = data => post('/a/user/update', data);
+// 用户列表
+export const getuserList = data => get('/a/user/list', data);
+// 用户信息
+export const getuserInfo = data => get('/a/user/get', data);
+// 删除用户
+export const deleteuser = data => post('/a/user/delete', data);
+// 商品管理
+// 商品列表
+export const getGoodsList = data => get('/a/goods/list', data);
+// 添加商品
+export const addGoods = data => post('/a/goods/add', data);
+// 修改商品
+export const updateGoods = data => post('/a/goods/update', data);
+// 删除商品
+export const deleteGoods = data => post('/a/goods/delete', data);
+
+4. 封装商城用户端接口：在 api.js 文件中，写入商城用户端在服务端定义好的接口路由并导出，代码如下：
+// 商城用户端
+// 用户注册
+export const register = data => post('/user/add', data);
+// 用户登录
+export const shoppingLogin = data => post('/auth/login', data);
+// 注销登录
+export const shoppingLogout = data => post('/auth/logout', data);
+// 商城列表
+export const getShoppingGoodsList = data => get('/goods/list', data);
+// 商品信息
+export const getGoodsInfo = data => get('/goods/get', data);
+// 购物车列表
+export const getCartList = data => get('/cart/list', data);
+// 添加购物车
+export const addCart = data => post('/cart/add', data);
+// 删除购物车
+export const deleteCart = data => post('/cart/delete', data);
+// 修改购物车
+export const updateCart = data => post('/cart/update', data);
+// 购物车结算
+export const buyorder = data => post('/order/add', data);
+
+
+总结
+
+本章节详细介绍了如何在 Vue2 项目中封装 Axios 请求和 API 接口。通过封装 Axios，可以统一处理请求和响应的拦截，简化网络请求的代码。通过封装 API 接口，可以将后端接口路由集中管理，便于前端调用和维护。后续在组件中可以直接调用这些封装好的 API 方法，实现与后端的数据交互。

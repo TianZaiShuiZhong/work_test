@@ -1,0 +1,1033 @@
+24 - 管理端商品管理
+
+一、引言
+
+在 Vue2 项目中，管理端商品管理页面是一个重要的组成部分，用于展示和管理商品信息。本实验手册将详细介绍一个基于 Vue2 的管理端商品管理页面的代码结构和功能实现。
+
+二、代码设计
+
+管理端商品管理页面的代码主要分布在 .vue 文件的 <template>、<script> 和 <style> 三个部分。
+
+1. <template> 部分代码如下：
+
+<template>
+  <div class="cart">
+    <div class="cart-header">
+      <div class="cart-header-line">
+        <div class="cart-header-title">商品管理</div>
+        <el-button type="primary" size="small" @click="dialogvisible=true">添加商品</el-button>
+      </div>
+      <div class="cart-header-main">
+        <div class="cart-info">商品信息</div>
+        <div class="cart-brand">品牌</div>
+        <div class="cart-price">价格</div>
+        <div class="cart-color">颜色</div>
+        <div class="cart-sales">销量</div>
+        <div class="cart-sales">状态</div>
+        <div class="cart-control">操作</div>
+      </div>
+    </div>
+    <div class="cart-content">
+      <!-- 列表显示商品清单 -->
+      <div class="cart-content-main" v-for="(item, index) in list" :key="index">
+        <div class="cart-info">
+          
+          <span>{{ item.name }}</span>
+        </div>
+        <div class="cart-brand">{{ item.brand }}</div>
+        <div class="cart-price">¥{{ item.cost }}</div>
+        <div class="cart-color">{{ item.color }}</div>
+        <div class="cart-sales">{{ item.sales }}</div>
+        <div class="cart-sales">{{ item.state === 1 ? '上架' : '下架' }}</div>
+        <div class="cart-control">
+          <span class="cart-control-edit" @click="handleEditItem(item)">编辑</span>
+          <span class="cart-control-delete" @click="handleDelete(item)">删除</span>
+        </div>
+      </div>
+    </div>
+    <!-- 添加/编辑商品对话框 -->
+    <el-dialog :visible.sync="dialogvisible" :title="title" width="50%">
+      <el-form :model="form" :rules="rules" ref="form">
+        <el-form-item label="商品名称" prop="name">
+          <el-input v-model="form.name"></el-input>
+        </el-form-item>
+        <el-form-item label="商品品牌" prop="brand">
+          <el-select v-model="form.brand" placeholder="请选择商品品牌">
+            <el-option label="品牌1" value="品牌1"></el-option>
+            <el-option label="品牌2" value="品牌2"></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="商品价格" prop="cost">
+          <el-input v-model="form.cost"></el-input>
+        </el-form-item>
+        <el-form-item label="商品颜色" prop="color">
+          <el-select v-model="form.color" placeholder="请选择商品颜色">
+            <el-option label="白色" value="白色"></el-option>
+            <el-option label="黑色" value="黑色"></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="商品状态" prop="state">
+          <el-select v-model="form.state" placeholder="请选择商品状态">
+            <el-option label="上架" :value="1"></el-option>
+            <el-option label="下架" :value="0"></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="商品图片" prop="image">
+          <el-upload class="avatar-uploader" :action="adminurl" :show-file-list="false" :on-success="handleAvatarSuccess" :before-upload="beforeAvatarUpload">
+            
+            <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+          </el-upload>
+        </el-form-item>
+        <el-form-item label="商品详情图片" prop="imageDetail">
+          <el-upload class="avatar-uploader" :action="adminurl" :show-file-list="false" :on-success="handleAvatarSuccess1" :before-upload="beforeAvatarUpload1">
+            
+            <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+          </el-upload>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="close">取消</el-button>
+        <el-button type="primary" v-loading="btnLoading" @click="submitForm('form')">确定</el-button>
+      </div>
+    </el-dialog>
+  </div>
+</template>
+
+
+2. <script> 部分代码如下：
+
+<script>
+import baseURL from '../../config/index.js';
+import { getGoodsList, addGoods, updateGoods, deleteGoods } from '../../service/api.js';
+
+export default {
+  name: "cart",
+  data() {
+    return {
+      // 弹窗相关
+      dialogvisible: false,
+      btnLoading: false,
+      title: "",
+      adminUrl: baseURL.uploadFileurl,
+      _image: "",
+      _imageDetail: "",
+      form: {
+        id: "",
+        name: "",
+        brand: "",
+        cost: "",
+        color: "",
+        state: 1,
+        image: "",
+        imageDetail: "",
+        sales: 0
+      },
+      rules: {
+        name: [{ required: true, message: "请输入商品名称", trigger: "blur" }],
+        brand: [{ required: true, message: "请选择商品品牌", trigger: "change" }],
+        cost: [{ required: true, message: "请输入商品价格", trigger: "blur" }],
+        color: [{ required: true, message: "请选择商品颜色", trigger: "change" }],
+        state: [{ required: true, message: "请选择商品状态", trigger: "change" }],
+        image: [{ required: true, message: "请上传商品图片", trigger: "change" }],
+        imageDetail: [{ required: true, message: "请上传商品详情", trigger: "change" }]
+      },
+      list: []
+    };
+  },
+  created() {
+    this.getList();
+  },
+  methods: {
+    // 图片处理
+    geturl(url) {
+      return baseURL.baseurl + '/' + url;
+    },
+    // 请求列表
+    async getList() {
+      const res = await getGoodsList({ page: 1, size: 100 });
+      if (res.code === 200) {
+        this.list = res.data;
+      } else {
+        this.$message.error(res.msg);
+      }
+    },
+    // 添加
+    handleCreateItem() {
+      this.dialogvisible = true;
+      this.title = "添加";
+      this.form = {
+        id: "",
+        name: "",
+        brand: "",
+        cost: "",
+        color: "",
+        state: 1,
+        image: "",
+        imageDetail: "",
+        sales: 0
+      };
+      this._image = "";
+      this._imageDetail = "";
+    },
+    // 编辑
+    handleEditItem(row) {
+      this.dialogvisible = true;
+      this.title = "编辑";
+      this.form.id = row.id;
+      this.form.name = row.name;
+      this.form.brand = row.brand;
+      this.form.state = row.state;
+      this.form.cost = row.cost;
+      this.form.color = row.color;
+      this.form.image = row.image;
+      this.form.imageDetail = row.imageDetail;
+      this.form.sales = row.sales;
+      this._image = baseURL.baseurl + '/' + row.image;
+      this._imageDetail = baseURL.baseurl + '/' + row.imageDetail;
+    },
+    // 删除
+    handleDelete(row) {
+      this.$confirm("确定删除此条数据?", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+      })
+        .then(async () => {
+          // 调用删除接口
+          const params = {
+            id: row.id
+          };
+          const res = await deleteGoods(params);
+          if (res.code === 200) {
+            this.$message.success("操作成功");
+            this.getList();
+          }
+        })
+        .catch(() => {});
+    },
+    // 重置表单
+    close() {
+      this.$refs.form.resetFields();
+      this.dialogvisible = false;
+    },
+    // 表单提交
+    submitForm(formName) {
+      this.btnLoading = true;
+      this.$refs[formName].validate(async (valid) => {
+        if (valid) {
+          if (this.form.id) {
+            const res = await updateGoods(this.form);
+            if (res.code === 200) {
+              this.$message.success("操作成功");
+              this.btnLoading = false;
+              this.close();
+              this.getList();
+            } else {
+              this.$message.error(res.msg);
+            }
+          } else {
+            const res = await addGoods(this.form);
+            if (res.code === 200) {
+              this.$message.success("操作成功");
+              this.btnLoading = false;
+              this.close();
+              this.getList();
+            } else {
+              this.$message.error(res.msg);
+            }
+          }
+        } else {
+          this.btnLoading = false;
+        }
+      });
+    },
+    handleAvatarSuccess(res, file) {
+      this.form.image = res.data;
+      this._image = URL.createObjectURL(file.raw);
+    },
+    beforeAvatarUpload(file) {
+      const isJPG = file.type === "image/jpeg";
+      const isLt2M = file.size / 1024 / 1024 < 2;
+      if (!isJPG) {
+        this.$message.error("上传图片只能是 JPG 格式!");
+      }
+      if (!isLt2M) {
+        this.$message.error("上传图片大小不能超过 2MB!");
+      }
+      return isJPG && isLt2M;
+    },
+    handleAvatarSuccess1(res, file) {
+      this.form.imageDetail = res.data;
+      this._imageDetail = URL.createObjectURL(file.raw);
+    },
+    beforeAvatarUpload1(file) {
+      const isJPG = file.type === "image/jpeg" || file.type === "image/png";
+      const isLt2M = file.size / 1024 / 1024 < 2;
+      if (!isJPG) {
+        this.$message.error("上传图片只能是 JPG/PNG 格式!");
+      }
+      if (!isLt2M) {
+        this.$message.error("上传图片大小不能超过 2MB!");
+      }
+      return isJPG && isLt2M;
+    },
+  },
+};
+</script>
+
+
+3. <style scoped> 部分代码如下：
+
+<style scoped>
+.cart {
+  margin: 32px;
+  background: #fff;
+  border: 1px solid #dddee1;
+  border-radius: 10px;
+}
+.cart-header-line {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  padding: 16px 32px;
+  border-bottom: 1px solid #dddee1;
+  border-radius: 10px 10px 0 0;
+  background: #f8f8f9;
+}
+.cart-header-title {
+  font-weight: 600;
+}
+.cart-header-main {
+  padding: 8px 32px;
+  overflow: hidden;
+  border-bottom: 1px solid #dddee1;
+  background: #eee;
+  overflow: hidden;
+}
+.cart-image {
+  float: left;
+  margin-right: 12px;
+}
+.cart-empty {
+  text-align: center;
+  padding: 32px;
+}
+.cart-header-main div {
+  text-align: center;
+  float: left;
+  font-size: 14px;
+}
+div.cart-info {
+  width: 30%;
+  text-align: left;
+}
+.cart-brand {
+  width: 10%;
+}
+.cart-price {
+  width: 10%;
+}
+.cart-color {
+  width: 10%;
+}
+.cart-sales {
+  width: 10%;
+}
+.cart-control {
+  width: 20%;
+}
+.cart-content-main {
+  padding: 0 32px;
+  height: 60px;
+  line-height: 60px;
+  text-align: center;
+  border-bottom: 1px dashed #e9eaec;
+  overflow: hidden;
+}
+.cart-content-main div {
+  float: left;
+}
+.cart-content-main img {
+  width: 40px;
+  height: 40px;
+  position: relative;
+  top: 10px;
+}
+.cart-control-edit {
+  cursor: pointer;
+  color: #d3b717;
+  margin-right: 10px;
+}
+.cart-control-delete {
+  cursor: pointer;
+  color: #2d8cf0;
+}
+.avatar-uploader {
+  width: 178px;
+  height: 178px;
+  border: 1px dashed #d9d9d9;
+  border-radius: 6px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+.avatar-uploader:hover {
+  border-color: #409eff;
+}
+.avatar-uploader-icon {
+  font-size: 28px;
+  color: #8c939d;
+  width: 178px;
+  height: 178px;
+  line-height: 178px;
+  text-align: center;
+}
+.avatar {
+  width: 178px;
+  height: 178px;
+  display: block;
+}
+</style>
+
+
+25 - 管理端用户管理
+
+一、引言
+
+在 Vue2 项目中，管理端用户管理页面是一个重要的组成部分，用于展示和管理用户信息。本实验手册将详细介绍一个基于 Vue2 的管理端用户管理页面的代码结构和功能实现。
+
+二、代码设计
+
+管理端用户管理页面的代码主要分布在 .vue 文件的 <template>、<script> 和 <style> 三个部分。
+
+1. <template> 部分代码如下：
+
+<template>
+  <div class="cart">
+    <div class="cart-header">
+      <div class="cart-header-line">
+        <div class="cart-header-title">用户管理</div>
+        <el-button type="primary" size="small" @click="dialogvisible=true">添加用户</el-button>
+      </div>
+      <div class="cart-header-main">
+        <div class="cart-info">用户信息</div>
+        <div class="cart-brand">登录密码</div>
+        <div class="cart-control">操作</div>
+      </div>
+    </div>
+    <div class="cart-content">
+      <!-- 列表显示用户清单 -->
+      <div class="cart-content-main" v-for="(item, index) in list" :key="index">
+        <div class="cart-info">
+          <span style="margin-right: 20px;">{{ '用户昵称:' + item.nickname }}</span>
+          <span>{{ '登录账号:' + item.username }}</span>
+        </div>
+        <div class="cart-brand">{{ item.password || '不显示' }}</div>
+        <div class="cart-control">
+          <span class="cart-control-edit" @click="handleEditItem(item)">编辑</span>
+          <span class="cart-control-delete" @click="handleDelete(item)">删除</span>
+        </div>
+      </div>
+      <div class="cart-empty" v-if="!list.length">用户列表为空</div>
+    </div>
+    <!-- 添加/编辑用户对话框 -->
+    <el-dialog :title="title + '用户'" :visible.sync="dialogvisible" width="800px" :before-close="close">
+      <el-form :model="form" :rules="rules" ref="form" label-width="160px">
+        <el-form-item label="用户昵称" prop="nickname">
+          <el-input v-model="form.nickname" maxlength="20" show-word-limit clearable></el-input>
+        </el-form-item>
+        <el-form-item label="登录账号" prop="username">
+          <el-input v-model="form.username" maxlength="8" show-word-limit clearable :readonly="title==='编辑'"></el-input>
+        </el-form-item>
+        <el-form-item label="登录密码" prop="password">
+          <el-input v-model="form.password" maxlength="8" show-word-limit clearable></el-input>
+        </el-form-item>
+        <el-form-item label="确认密码" prop="confirmPassword">
+          <el-input v-model="form.confirmPassword" maxlength="8" show-word-limit clearable></el-input>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="close">取消</el-button>
+        <el-button type="primary" v-loading="btnLoading" @click="submitForm('form')">确定</el-button>
+      </div>
+    </el-dialog>
+  </div>
+</template>
+
+
+2. <script> 部分代码如下：
+
+<script>
+import { getUserList, addUser, updateUser, deleteUser } from "../../service/api.js";
+
+export default {
+  name: "user",
+  data() {
+    return {
+      // 弹窗相关
+      dialogvisible: false,
+      btnLoading: false,
+      title: "",
+      form: {
+        nickname: "",
+        username: "",
+        password: "",
+        confirmPassword: ""
+      },
+      rules: {
+        nickname: [{ required: true, message: "请输入用户昵称", trigger: "blur" }],
+        username: [{ required: true, message: "请输入登录账号", trigger: "blur" }],
+        password: [{ required: true, message: "请输入登录密码", trigger: "blur" }],
+        confirmPassword: [{ required: true, message: "请输入确认密码", trigger: "blur" }]
+      },
+      list: []
+    };
+  },
+  created() {
+    this.getList();
+  },
+  methods: {
+    // 请求列表
+    async getList() {
+      const res = await getUserList({ page: 1, size: 100 });
+      if (res.code === 200) {
+        this.list = res.data;
+      } else {
+        this.$message.error(res.msg);
+      }
+    },
+    // 添加
+    handleCreateItem() {
+      this.dialogvisible = true;
+      this.title = "添加";
+      this.form = {
+        nickname: "",
+        username: "",
+        password: "",
+        confirmPassword: ""
+      };
+    },
+    // 编辑
+    handleEditItem(row) {
+      this.dialogvisible = true;
+      this.title = "编辑";
+      this.form.id = row.id;
+      this.form.nickname = row.nickname;
+      this.form.username = row.username;
+      this.form.password = row.password;
+      this.form.confirmPassword = row.confirmPassword;
+    },
+    // 删除
+    handleDelete(row) {
+      this.$confirm("确定删除此条数据?", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+      })
+        .then(async () => {
+          // 调用删除接口
+          const params = {
+            id: row.id
+          };
+          const res = await deleteUser(params);
+          if (res.code === 200) {
+            this.$message.success("操作成功");
+            this.getList();
+          }
+        })
+        .catch(() => {});
+    },
+    // 重置表单
+    close() {
+      this.$refs.form.resetFields();
+      this.dialogvisible = false;
+    },
+    // 表单提交
+    submitForm(formName) {
+      this.btnLoading = true;
+      this.$refs[formName].validate(async (valid) => {
+        if (valid) {
+          if (this.form.id) {
+            const res = await updateUser(this.form);
+            if (res.code === 200) {
+              this.$message.success("操作成功");
+              this.btnLoading = false;
+              this.close();
+              this.getList();
+            } else {
+              this.$message.error(res.msg);
+            }
+          } else {
+            const res = await addUser(this.form);
+            if (res.code === 200) {
+              this.$message.success("操作成功");
+              this.btnLoading = false;
+              this.close();
+              this.getList();
+            } else {
+              this.$message.error(res.msg);
+            }
+          }
+        } else {
+          this.btnLoading = false;
+        }
+      });
+    },
+  },
+};
+</script>
+
+
+3. <style scoped> 部分代码如下：
+
+<style scoped>
+.cart {
+  margin: 32px;
+  background: #fff;
+  border: 1px solid #dddee1;
+  border-radius: 10px;
+}
+.cart-header-line {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  padding: 16px 32px;
+  border-bottom: 1px solid #dddee1;
+  border-radius: 10px 10px 0 0;
+  background: #f8f8f9;
+}
+.cart-header-title {
+  font-weight: 600;
+}
+.cart-header-main {
+  padding: 8px 32px;
+  overflow: hidden;
+  border-bottom: 1px solid #dddee1;
+  background: #eee;
+  overflow: hidden;
+}
+.cart-empty {
+  text-align: center;
+  padding: 32px;
+}
+.cart-header-main div {
+  text-align: center;
+  float: left;
+  font-size: 14px;
+}
+div.cart-info {
+  width: 40%;
+  text-align: left;
+}
+.cart-brand {
+  width: 10%;
+}
+.cart-control {
+  width: 20%;
+}
+.cart-content-main {
+  padding: 0 32px;
+  height: 60px;
+  line-height: 60极好的！我将为您整理完整的25-管理端用户管理文档，保持与之前一致的详细格式和结构。
+
+### 25-管理端用户管理
+
+#### 一、引言
+在Vue2项目中，管理端用户管理页面是系统管理的重要组成部分，用于展示、添加、编辑和删除用户信息。本文档将详细介绍基于Vue2和ElementUI的管理端用户管理功能的代码实现。
+
+#### 二、代码设计
+该功能主要包含在.vue文件的三个部分：<template>、<script>和<style>。
+
+##### 1. <template>部分代码
+vue
+<template>
+  <div class="cart">
+    <div class="cart-header">
+      <div class="cart-header-line">
+        <div class="cart-header-title">用户管理</div>
+        <el-button type="primary" size="small" @click="dialogvisible=true">添加用户</el-button>
+      </div>
+      <div class="cart-header-main">
+        <div class="cart-info">用户信息</div>
+        <div class="cart-brand">登录密码</div>
+        <div class="cart-control">操作</div>
+      </div>
+    </div>
+    <div class="cart-content">
+      <!-- 用户列表展示 -->
+      <div class="cart-content-main" v-for="(item, index) in list" :key="index">
+        <div class="cart-info">
+          <span style="margin-right: 20px;">{{'用户昵称:'+item.nickname}}</span>
+          <span>{{'登录账号:'+item.username}}</span>
+        </div>
+        <div class="cart-brand">{{item.password||'不显示'}}</div>
+        <div class="cart-control">
+          <span class="cart-control-edit" @click="handleEditItem(item)">编辑</span>
+          <span class="cart-control-delete" @click="handleDelete(item)">删除</span>
+        </div>
+      </div>
+      <div class="cart-empty" v-if="!list.length">用户列表为空</div>
+    </div>
+    
+    <!-- 添加/编辑用户对话框 -->
+    <el-dialog :title="title+'用户'" :visible.sync="dialogvisible" width="800px" :before-close="close">
+      <el-form :model="form" :rules="rules" ref="form" label-width="160px">
+        <el-form-item label="用户昵称" prop="nickname">
+          <el-input v-model="form.nickname" maxlength="20" show-word-limit clearable></el-input>
+        </el-form-item>
+        <el-form-item label="登录账号" prop="username">
+          <el-input v-model="form.username" maxlength="8" show-word-limit clearable :readonly="title==='编辑'"></el-input>
+        </el-form-item>
+        <el-form-item label="登录密码" prop="password">
+          <el-input v-model="form.password" maxlength="8" show-word-limit clearable></el-input>
+        </el-form-item>
+        <el-form-item label="确认密码" prop="confirmPassword">
+          <el-input v-model="form.confirmPassword" maxlength="8" show-word-limit clearable></el-input>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="close">取消</el-button>
+        <el-button type="primary" v-loading="btnLoading" @click="submitForm('form')">确定</el-button>
+      </div>
+    </el-dialog>
+  </div>
+</template>
+
+
+##### 2. <script>部分代码
+javascript
+<script>
+import { getUserList, addUser, updateUser, deleteUser } from "../../service/api.js";
+
+export default {
+  name: "user",
+  data() {
+    return {
+      // 弹窗相关
+      dialogvisible: false,
+      btnLoading: false,
+      title: "",
+      form: {
+        nickname: "",
+        username: "",
+        password: "",
+        confirmPassword: ""
+      },
+      rules: {
+        nickname: [{ required: true, message: "请输入用户昵称", trigger: "blur" }],
+        username: [{ required: true, message: "请输入登录账号", trigger: "blur" }],
+        password: [{ required: true, message: "请输入登录密码", trigger: "blur" }],
+        confirmPassword: [{ required: true, message: "请输入确认密码", trigger: "blur" }]
+      },
+      list: []
+    };
+  },
+  created() {
+    this.getList();
+  },
+  methods: {
+    // 获取用户列表
+    async getList() {
+      const res = await getUserList({ page: 1, size: 100 });
+      if (res.code === 200) {
+        this.list = res.data;
+      } else {
+        this.$message.error(res.msg);
+      }
+    },
+    
+    // 添加用户
+    handleCreateItem() {
+      this.dialogvisible = true;
+      this.title = "添加";
+      this.form = {
+        nickname: "",
+        username: "",
+        password: "",
+        confirmPassword: ""
+      };
+    },
+    
+    // 编辑用户
+    handleEditItem(row) {
+      this.dialogvisible = true;
+      this.title = "编辑";
+      this.form.id = row.id;
+      this.form.nickname = row.nickname;
+      this.form.username = row.username;
+      this.form.password = row.password;
+      this.form.confirmPassword = row.confirmPassword;
+    },
+    
+    // 删除用户
+    handleDelete(row) {
+      this.$confirm("确定删除此条数据?", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+      })
+      .then(async () => {
+        const params = { id: row.id };
+        const res = await deleteUser(params);
+        if (res.code === 200) {
+          this.$message.success("操作成功");
+          this.getList();
+        }
+      })
+      .catch(() => {});
+    },
+    
+    // 关闭对话框并重置表单
+    close() {
+      this.$refs.form.resetFields();
+      this.dialogvisible = false;
+    },
+    
+    // 提交表单
+    submitForm(formName) {
+      this.btnLoading = true;
+      this.$refs[formName].validate(async (valid) => {
+        if (valid) {
+          if (this.form.id) {
+            // 更新用户
+            const res = await updateUser(this.form);
+            if (res.code === 200) {
+              this.$message.success("操作成功");
+              this.btnLoading = false;
+              this.close();
+              this.getList();
+            } else {
+              this.$message.error(res.msg);
+            }
+          } else {
+            // 添加用户
+            const res = await addUser(this.form);
+            if (res.code === 200) {
+              this.$message.success("操作成功");
+              this.btnLoading = false;
+              this.close();
+              this.getList();
+            } else {
+              this.$message.error(res.msg);
+            }
+          }
+        } else {
+          this.btnLoading = false;
+        }
+      });
+    }
+  }
+};
+</script>
+
+
+##### 3. <style scoped>部分代码
+vue
+<style scoped>
+.cart {
+  margin: 32px;
+  background: #fff;
+  border: 1px solid #dddee1;
+  border-radius: 10px;
+}
+
+.cart-header-line {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  padding: 16px 32px;
+  border-bottom: 1px solid #dddee1;
+  border-radius: 10px 10px 0 0;
+  background: #f8f8f9;
+}
+
+.cart-header-title {
+  font-weight: 600;
+}
+
+.cart-header-main {
+  padding: 8px 32px;
+  overflow: hidden;
+  border-bottom: 1px solid #dddee1;
+  background: #eee;
+  overflow: hidden;
+}
+
+.cart-empty {
+  text-align: center;
+  padding: 32px;
+}
+
+.cart-header-main div {
+  text-align: center;
+  float: left;
+  font-size: 14px;
+}
+
+div.cart-info {
+  width: 40%;
+  text-align: left;
+}
+
+.cart-brand {
+  width: 10%;
+}
+
+.cart-control {
+  width: 20%;
+}
+
+.cart-content-main {
+  padding: 0 32px;
+  height: 60px;
+  line-height: 60px;
+  text-align: center;
+  border-bottom: 1px dashed #e9eaec;
+  overflow: hidden;
+}
+
+.cart-content-main div {
+  float: left;
+}
+
+.cart-control-edit {
+  cursor: pointer;
+  color: #d3b717;
+  margin-right: 10px;
+}
+
+.cart-control-delete {
+  cursor: pointer;
+  color: #2d8cf0;
+}
+</style>
+```
+
+三、代码解析
+
+1. 整体结构
+
+这是一个Vue组件，用于管理端用户管理功能，包含：
+• 用户列表展示区域
+
+• 添加用户按钮
+
+• 用户信息操作区域（编辑/删除）
+
+• 添加/编辑用户的弹窗表单
+
+2. 主要功能模块
+
+1. 用户列表展示
+   • 使用v-for循环展示用户数据
+
+   • 显示用户昵称、登录账号和密码（密码默认隐藏）
+
+   • 提供编辑和删除操作按钮
+
+   • 当用户列表为空时显示提示信息
+
+2. 添加/编辑用户弹窗
+   • 使用ElementUI的el-dialog组件
+
+   • 包含用户昵称、登录账号、登录密码和确认密码字段
+
+   • 编辑模式下登录账号字段为只读
+
+   • 表单验证规则确保必填字段完整性
+
+3. 核心操作功能
+   • 获取用户列表（created生命周期钩子自动调用）
+
+   • 添加新用户
+
+   • 编辑现有用户
+
+   • 删除用户（带确认提示）
+
+3. 技术实现要点
+
+1. 数据管理
+   • 使用Vue的data属性管理组件状态
+
+   • 通过Vuex store获取用户信息（示例中未展示，但通常如此）
+
+   • 表单数据与用户列表数据分离管理
+
+2. API交互
+   • 导入并使用服务层API方法：
+
+     ◦ getUserList：获取用户列表
+
+     ◦ addUser：添加用户
+
+     ◦ updateUser：更新用户
+
+     ◦ deleteUser：删除用户
+
+   • 异步处理API调用结果
+
+3. 用户体验优化
+   • 加载状态提示（btnLoading）
+
+   • 操作成功/失败消息提示（$message）
+
+   • 表单验证和错误处理
+
+   • 确认对话框防止误操作
+
+4. 响应式设计
+   • 使用ElementUI组件保证跨平台一致性
+
+   • 合理的布局和间距设计
+
+   • 清晰的视觉层次和操作反馈
+
+4. 样式设计
+
+1. 整体布局
+   • 卡片式设计风格
+
+   • 清晰的区域划分（头部、内容区、操作区）
+
+   • 适当的间距和边距
+
+2. 交互元素
+   • 按钮状态和颜色区分（主操作/次要操作）
+
+   • 链接和按钮的悬停效果
+
+   • 表单元素的清晰标识
+
+3. 响应式考虑
+   • 适配不同屏幕尺寸
+
+   • 合理的元素尺寸和间距
+
+四、总结
+
+本文档详细介绍了管理端用户管理功能的实现，包括：
+
+1. 功能特性
+   • 完整的用户CRUD操作
+
+   • 直观的用户界面设计
+
+   • 良好的用户体验和交互反馈
+
+2. 技术亮点
+   • Vue2组件化开发
+
+   • ElementUI组件库应用
+
+   • 异步API交互处理
+
+   • 表单验证和错误处理
+
+3. 扩展建议
+   • 可添加用户搜索和筛选功能
+
+   • 可扩展更多用户属性字段
+
+   • 可增加批量操作功能
+
+   • 可完善权限控制机制
+
+该实现为系统管理提供了基础但完整的用户管理功能，具有良好的可维护性和扩展性，可以作为更复杂管理系统的基础模块。

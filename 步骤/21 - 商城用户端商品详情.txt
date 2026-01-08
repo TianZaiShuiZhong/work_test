@@ -1,0 +1,198 @@
+21 - 商城用户端商品详情
+
+一、引言
+
+在 Vue2 项目中，商城用户端商品详情页面是一个关键的组成部分，用于展示单个商品的详细信息并提供加入购物车的功能。本实验手册将详细介绍一个基于 Vue2 的商品详情页面的代码结构和功能实现。
+
+二、代码设计
+
+商品详情页面的代码主要分布在 .vue 文件的 <template>、<script> 和 <style> 三个部分。
+
+1. <template> 部分代码如下：
+
+<template>
+  <div v-if="product">
+    <div class="product">
+      <!-- 商品图片、名称、价格 -->
+      <div class="product-image">
+        
+      </div>
+      <div class="product-info">
+        <h1 class="product-name">{{ product.name }}</h1>
+        <div class="product-cost">{{ product.cost }}</div>
+        <div class="product-add-cart" @click="handleAddCart">加入购物车</div>
+      </div>
+      <!-- 产品介绍 -->
+      <div class="product-desc">
+        <h2>产品介绍</h2>
+        
+      </div>
+    </div>
+  </div>
+</template>
+
+
+2. <script> 部分代码如下：
+
+<script>
+import { getGoodsInfo, addCart } from "@/service/api";
+import util from "@/util";
+
+export default {
+  data() {
+    return {
+      // 获取路由中的参数
+      id: parseInt(this.$route.params.id),
+      product: null,
+      // count: 0, // 购买数量
+    };
+  },
+  methods: {
+    async getProduct() {
+      try {
+        const res = await getGoodsInfo({
+          id: parseInt(this.$route.params.id),
+        });
+        if (res.code === 200) {
+          const data = res.data;
+          data.image = util.getImgUrl(data.image);
+          data.imageDetail = util.getImgUrl(data.imageDetail);
+          this.product = data;
+        }
+      } catch (error) {
+        this.$message.error(error);
+      }
+    },
+    async handleAddCart() {
+      try {
+        // this.count = ++this.count;
+        const res = await addCart({
+          goodsId: this.id,
+          // goodsNumber: this.count,
+        });
+        if (res.code === 200) {
+          this.$message.success("加入购物车成功");
+        }
+      } catch (error) {
+        this.$message.error(error);
+      }
+    },
+  },
+  mounted() {
+    // 初始化数据
+    this.getProduct();
+  },
+};
+</script>
+
+
+3. <style scoped> 部分代码如下：
+
+<style scoped>
+.product {
+  margin: 32px;
+  padding: 32px;
+  background: #fff;
+  border: 1px solid #dddee1;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.product-image {
+  width: 50%;
+  height: 550px;
+  float: left;
+  text-align: center;
+}
+.product-image img {
+  height: 100%;
+}
+.product-info {
+  width: 50%;
+  padding: 150px 0 250px;
+  height: 150px;
+  float: left;
+  text-align: center;
+}
+.product-cost {
+  color: #f2352e;
+  margin: 8px 0;
+}
+.product-add-cart {
+  display: inline-block;
+  padding: 8px 64px;
+  margin: 8px 0;
+  background: #2d8cf0;
+  color: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.product-desc {
+  clear: both;
+  margin-top: 32px;
+}
+.product-desc img {
+  width: 100%;
+  border: 1px solid #dddee1;
+  border-radius: 4px;
+}
+</style>
+
+
+三、代码解析
+
+1. 整体结构
+
+这是一个 Vue 组件，用于展示单个商品的详细信息，并提供加入购物车的功能。整体结构包括商品图片、名称、价格等信息的展示区域，以及产品介绍区域。如果商品数据不存在，则不进行渲染。
+
+2. 使用的组件
+
+无自定义组件引入，但使用了 Vue 内置的一些功能和第三方库的函数。
+
+3. 绑定的事件
+
+• 在商品信息区域：
+
+  • @click="handleAddCart"：绑定在“加入购物车”按钮上，点击时触发 handleAddCart 方法，用于将商品加入购物车。
+
+4. 数据部分
+
+• data 函数中定义了以下数据属性：
+
+  • id：从路由参数中获取商品的 ID，并转换为整数类型。
+
+  • product：用于存储商品的详细信息，初始值为 null。
+
+  • count（注释部分）：可能是用于记录购买数量的属性，但在当前代码中未被使用。
+
+5. 方法部分
+
+• getProduct：异步方法，用于获取商品的详细信息。调用后端 API（getGoodsInfo）并传入商品 ID，处理返回的数据，如果成功获取到商品信息，对图片路径进行处理后更新 product 属性。如果出现错误，会显示错误信息。
+
+• handleAddCart：异步方法，用于将商品加入购物车。调用后端 API（addCart）并传入商品 ID，成功加入购物车后显示成功提示信息，出现错误则显示错误信息。
+
+6. 生命周期钩子（mounted）
+
+在组件挂载后调用 getProduct 方法，初始化商品数据。
+
+7. 样式部分
+
+通过 <style scoped> 定义了组件的局部样式：
+• .product：设置商品信息展示区域的样式，包括边距、背景颜色、边框、圆角和溢出隐藏。
+
+• .product-image：设置商品图片区域的样式，包括宽度、高度、浮动和文本居中。
+
+• .product-image img：设置商品图片的样式，使其高度占满父元素。
+
+• .product-info：设置商品信息区域的样式，包括宽度、填充、高度、浮动和文本居中。
+
+• .product-cost：设置商品价格的样式，颜色为特定值。
+
+• .product-add-cart：设置“加入购物车”按钮的样式，包括内边距、背景颜色、文字颜色、圆角和鼠标指针为手型。
+
+• .product-desc：设置产品介绍区域的样式，包括边距、背景颜色、边框、圆角和文本居中。
+
+• .product-desc img：设置产品介绍图片的样式，包括宽度、边距、边框和显示为块级元素。
+
+四、总结
+
+本章节详细介绍了商城用户端商品详情页面的代码结构和功能实现。通过 <template>、<script> 和 <style> 三个部分的代码，实现了商品图片、名称、价格等信息的展示，以及产品介绍区域的展示和加入购物车的功能。后续可以在该模块的基础上，进一步扩展功能，如商品评价、商品规格选择等。

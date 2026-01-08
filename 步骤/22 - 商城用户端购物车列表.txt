@@ -1,0 +1,359 @@
+22 - 商城用户端购物车列表
+
+一、引言
+
+在 Vue2 项目中，商城用户端购物车列表页面是一个重要的组成部分，用于展示用户购物车中的商品，并提供修改商品数量、删除商品、计算总价和下单等功能。本实验手册将详细介绍一个基于 Vue2 的购物车列表页面的代码结构和功能实现。
+
+二、代码设计
+
+购物车列表页面的代码主要分布在 .vue 文件的 <template>、<script> 和 <style> 三个部分。
+
+1. <template> 部分代码如下：
+
+<template>
+  <div class="cart">
+    <div class="cart-header">
+      <div class="cart-header-title">购物清单</div>
+      <div class="cart-header-main">
+        <div class="cart-info">商品信息</div>
+        <div class="cart-price">单价</div>
+        <div class="cart-count">数量</div>
+        <div class="cart-cost">小计</div>
+        <div class="cart-delete">删除</div>
+      </div>
+    </div>
+    <div class="cart-content">
+      <!-- 列表显示购物清单 -->
+      <div class="cart-content-main" v-for="(item, index) in cartList" :key="index">
+        <div class="cart-info">
+          
+          <span>{{ item.goods.name }}</span>
+        </div>
+        <div class="cart-price">¥{{ item.goods.cost }}</div>
+        <div class="cart-count">
+          <span class="cart-control-minus" @click="handleCount(index, -1)">-</span>
+          {{ item.goodsNumber }}
+          <span class="cart-control-add" @click="handleCount(index, 1)">+</span>
+        </div>
+        <div class="cart-cost">¥{{ item.goods.cost * item.goodsNumber }}</div>
+        <div class="cart-delete">
+          <span class="cart-control-delete" @click="handleDelete(index)">删除</span>
+        </div>
+      </div>
+      <div class="cart-empty" v-if="!cartList.length">购物车为空</div>
+    </div>
+    <div class="cart-footer" v-show="cartList.length">
+      <div class="cart-footer-desc">共计<span>{{ countAll }}</span></div>
+      <div class="cart-footer-desc">应付总额<span>{{ costAll }}</span></div>
+      <div class="cart-footer-desc">
+        <div class="cart-control-order" @click="handleorder">现在结算</div>
+      </div>
+    </div>
+  </div>
+</template>
+
+
+2. <script> 部分代码如下：
+
+<script>
+import baseURL from "@/config/index.js";
+import { getCartList, updateCart, deleteCart, buyorder } from "../../service/api";
+import product_data from "../../product";
+
+export default {
+  name: "cart",
+  data() {
+    return {
+      promotion: 0,
+      promotionCode: "",
+      productList: product_data,
+      cartList: [],
+    };
+  },
+  computed: {
+    // 设置字典对象，方便查询
+    productDictList() {
+      const dict = {};
+      this.productList.forEach((item) => {
+        dict[item.id] = item;
+      });
+      return dict;
+    },
+    // 购物车商品总数
+    countAll() {
+      let count = 0;
+      this.cartList.forEach((item) => {
+        count += item.goodsNumber;
+      });
+      return count;
+    },
+    // 购物车商品总价
+    costAll() {
+      let cost = 0;
+      this.cartList.forEach((item) => {
+        cost += item.goods.cost * item.goodsNumber;
+      });
+      return cost;
+    },
+  },
+  created() {
+    this.getMyCartList();
+  },
+  methods: {
+    // 图片处理
+    getUrl(url) {
+      return baseURL.baseurl + "/" + url;
+    },
+    // 获取购物车列表
+    async getMyCartList() {
+      try {
+        const res = await getCartList({});
+        this.cartList = res.data;
+      } catch (error) {
+        this.$message.error(error);
+      }
+    },
+    // 通知 Vuex，完成下单
+    async handleorder() {
+      try {
+        let params = [];
+        this.cartList.forEach((item) => {
+          params.push(item.id);
+        });
+        console.log(params);
+        const res = await buyorder(params);
+        if (res.code === 200) {
+          this.$message.success("下单成功");
+          this.$store.commit("setCartNum", 0);
+          window.location.href = "/shopping/list";
+        }
+      } catch (error) {
+        this.$message.error(error);
+      }
+    },
+    // 修改购物车数量
+    async handleCount(index, count) {
+      // 最小值设置 1
+      if (count < 0 && this.cartList[index].goodsNumber === 1) return;
+      try {
+        const res = await updateCart({
+          id: this.cartList[index].id,
+          goodsId: this.cartList[index].goods.id,
+          goodsNumber: this.cartList[index].goodsNumber + count,
+        });
+        if (res.code === 200) {
+          this.getMyCartList();
+          this.$store.commit("setCartNum", this.$store.state.cartNum + count);
+        }
+      } catch (error) {
+        this.$message.error(error);
+      }
+    },
+    // 根据 index 查找商品 id 进行删除
+    async handleDelete(index) {
+      this.$confirm("确定删除此条数据？", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+      })
+        .then(async () => {
+          // 调用删除接口
+          const res = await deleteCart([this.cartList[index].id]);
+          if (res.code === 200) {
+            this.getMyCartList();
+            setTimeout(() => {
+              this.$store.commit("setCartNum", this.countAll);
+            }, 500);
+          }
+        })
+        .catch(() => {});
+    },
+  },
+};
+</script>
+
+
+3. <style scoped> 部分代码如下：
+
+<style scoped>
+.cart {
+  margin: 32px;
+  background: #fff;
+  border: 1px solid #dddee1;
+  border-radius: 10px;
+}
+.cart-header-title {
+  padding: 16px 32px;
+  border-bottom: 1px solid #dddee1;
+  border-radius: 10px 10px 0 0;
+  background: #f8f8f9;
+}
+.cart-header-main {
+  padding: 8px 32px;
+  overflow: hidden;
+  border-bottom: 1px solid #dddee1;
+  background: #eee;
+  overflow: hidden;
+}
+.cart-empty {
+  text-align: center;
+  padding: 32px;
+}
+.cart-header-main div {
+  text-align: center;
+  float: left;
+  font-size: 14px;
+}
+div.cart-info {
+  width: 60%;
+  text-align: left;
+}
+.cart-price {
+  width: 10%;
+}
+.cart-count {
+  width: 10%;
+}
+.cart-cost {
+  width: 10%;
+}
+.cart-delete {
+  width: 10%;
+}
+.cart-content-main {
+  padding: 0 32px;
+  height: 60px;
+  line-height: 60px;
+  text-align: center;
+  border-bottom: 1px dashed #e9eaec;
+  overflow: hidden;
+}
+.cart-content-main div {
+  float: left;
+}
+.cart-content-main img {
+  width: 40px;
+  height: 40px;
+  position: relative;
+  top: 10px;
+}
+.cart-control-minus,
+.cart-control-add {
+  display: inline-block;
+  margin: 0 4px;
+  width: 24px;
+  height: 24px;
+  line-height: 22px;
+  text-align: center;
+  background: #f8f8f9;
+  border-radius: 50%;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+}
+.cart-control-delete {
+  cursor: pointer;
+  color: #2d8cf0;
+}
+.cart-promotion {
+  padding: 16px 32px;
+}
+.cart-control-promotion,
+.cart-control-order {
+  display: inline-block;
+  padding: 8px 32px;
+  border-radius: 6px;
+  background: #2d8cf0;
+  color: #fff;
+  cursor: pointer;
+}
+.cart-control-promotion {
+  padding: 2px 6px;
+  font-size: 12px;
+  border-radius: 3px;
+}
+.cart-footer {
+  padding: 32px;
+  text-align: right;
+}
+.cart-footer-desc {
+  display: inline-block;
+  padding: 0 16px;
+}
+.cart-footer-desc span {
+  color: #f2352e;
+  font-size: 20px;
+}
+</style>
+
+
+三、代码解析
+
+1. 整体结构
+
+这是一个 Vue 组件，用于展示购物车页面，包括购物车列表、商品总数、应付总额和结算等功能。整体结构由购物车头部（标题和列名）、购物车内容（商品列表或空提示）和购物车底部（总计和结算按钮）组成。
+
+2. 使用的组件
+
+无自定义组件引入，但使用了一些第三方库和配置文件中的模块。
+
+3. 绑定的事件
+
+1. 在购物车内容区域：
+   • @click="handleCount(index, -1)"：绑定在商品数量减号按钮上，点击时触发 handleCount 方法，减少商品数量并更新购物车和 Vuex 中的购物车数量状态。
+
+   • @click="handleCount(index, 1)"：绑定在商品数量加号按钮上，点击时触发 handleCount 方法，增加商品数量并更新购物车和 Vuex 中的购物车数量状态。
+
+   • @click="handleDelete(index)"：绑定在商品删除按钮上，点击时触发 handleDelete 方法，弹出确认框，确认后删除商品并更新购物车和 Vuex 中的购物车数量状态。
+
+2. 在购物车底部：
+   • @click="handleorder"：绑定在结算按钮上，点击时触发 handleorder 方法，调用后端接口下单，并在成功后跳转到商品列表页面，同时更新 Vuex 中的购物车数量状态。
+
+4. 数据部分
+
+1. data 函数中定义了以下数据属性：
+   • promotion：可能用于存储促销信息相关的值，初始值为 0。
+
+   • promotionCode：可能用于存储促销码，初始值为空字符串。
+
+   • productList：可能是商品列表数据，从 ../../product 引入。
+
+   • cartList：用于存储购物车列表数据，初始值为空数组。
+
+5. 计算属性（computed）
+
+1. productDictList：根据 productList 生成一个字典对象，方便通过商品 ID 查询商品信息。
+2. countAll：计算购物车中商品的总数，遍历 cartList 计算每个商品的数量之和。
+3. costAll：计算购物车中商品的总价，遍历 cartList 计算每个商品的价格乘以数量之和。
+
+6. 生命周期钩子（created）
+
+在组件创建时调用 getMyCartList 方法获取购物车列表数据。
+
+7. 方法部分
+
+1. getUrl：用于处理图片路径，将图片路径与配置文件中的基础 URL 拼接起来。
+2. getMyCartList：异步方法，用于获取购物车列表数据。调用后端 API（getCartList）获取数据，并更新 cartList 属性。如果出现错误，会显示错误信息。
+3. handleorder：异步方法，用于下单。调用后端 API（buyorder）并传入购物车商品的 ID 列表，成功下单后显示成功提示信息，更新 Vuex 中的购物车数量状态，并跳转到商品列表页面。如果出现错误，会显示错误信息。
+4. handleCount：异步方法，用于修改购物车中商品的数量。根据传入的索引和数量调整商品数量，调用后端 API（updateCart）更新购物车数据，并更新购物车列表和 Vuex 中的购物车数量状态。如果出现错误，会显示错误信息。
+5. handleDelete：异步方法，用于删除购物车中的商品。弹出确认框，确认后调用后端 API（deleteCart）删除商品，更新购物车列表和 Vuex 中的购物车数量状态。
+
+8. 样式部分
+
+通过 <style scoped> 定义了组件的局部样式：
+1. .cart：设置购物车整体的样式，包括边距、背景颜色、边框和圆角。
+2. .cart-header-title：设置购物车头部标题的样式，包括内边距、边框底部、圆角和背景颜色。
+3. .cart-header-main：设置购物车头部列名区域的样式，包括内边距、溢出隐藏、边框底部、背景颜色和溢出隐藏。
+4. .cart-empty：设置购物车为空时的提示样式，包括文本居中对齐和内边距。
+5. .cart-header-main div：设置购物车头部列名的样式，包括文本居中对齐、浮动和字体大小。
+6. .cart-info、.cart-price、.cart-count、.cart-cost 和 .cart-delete：设置购物车内容中各个列的宽度和浮动。
+7. .cart-content-main：设置购物车内容区域的样式，包括内边距、高度、行高、边框底部、溢出隐藏和文本居中。
+8. .cart-content-main div：设置购物车内容中各个列的浮动。
+9. .cart-content-main img：设置购物车内容中商品图片的样式，包括宽度、高度和相对位置。
+10. .cart-control-minus、.cart-control-add 和 .cart-control-delete：设置购物车内容中数量控制按钮和删除按钮的样式，包括显示方式、内联块、内边距、高度、行高、文本对齐、背景颜色、圆角、阴影、光标和边框。
+11. .cart-control-promotion 和 .cart-control-order：设置购物车内容中促销和结算按钮的样式，包括显示方式、内联块、内边距、高度、行高、文本对齐、背景颜色、文字颜色和光标。
+12. .cart-footer：设置购物车底部的样式，包括内边距和文本对齐。
+13. .cart-footer-desc：设置购物车底部各个描述信息的样式，包括显示方式、内联块、内边距。
+14. .cart-footer-desc span：设置购物车底部各个描述信息中数值的样式，包括文字颜色和字体大小。
+
+四、总结
+
+本章节详细介绍了商城用户端购物车列表页面的代码结构和功能实现。通过 <template>、<script> 和 <style> 三个部分的代码，实现了购物车商品列表的展示、商品数量的增减、商品的删除、购物车商品总数和总价的计算、以及下单功能。购物车页面通过组件化和模块化的设计，确保了代码的可维护性和扩展性。后续可以在该模块的基础上，进一步扩展功能，如优惠券的使用、商品规格的选择等。

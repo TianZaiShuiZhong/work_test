@@ -1,0 +1,345 @@
+20 - 商城用户端商品列表
+
+一、引言
+
+在 Vue2 项目中，商城用户端商品列表页面是一个重要的组成部分，用于展示商品信息并提供筛选和排序功能。本实验手册将详细介绍一个基于 Vue2 的商品列表页面的代码结构和功能实现。
+
+二、代码设计
+
+商品列表页面的代码主要分布在 .vue 文件的 <template>、<script> 和 <style> 三个部分。
+
+1. <template> 部分代码如下：
+
+<template>
+  <div>
+    <div class="list-control">
+      <div class="list-control-filter">
+        <span>品牌:</span>
+        <span 
+          class="list-control-filter-item" 
+          :class="{ on: item === brand }" 
+          v-for="(item, index) in brands" 
+          :key="index" 
+          @click="handleFilterBrand(item)"
+        >
+          {{ item }}
+        </span>
+      </div>
+      <div class="list-control-filter">
+        <span>颜色:</span>
+        <span 
+          class="list-control-filter-item" 
+          :class="{ on: item === color }" 
+          v-for="(item, index) in colors" 
+          :key="index" 
+          @click="handleFilterColor(item)"
+        >
+          {{ item }}
+        </span>
+      </div>
+      <div class="list-control-order">
+        <span>排序:</span>
+        <span 
+          class="list-control-order-item" 
+          :class="{ on: sort === '' }" 
+          @click="handleSortDefault"
+        >
+          默认
+        </span>
+        <span 
+          class="list-control-order-item" 
+          :class="{ on: sort === 'sales' }" 
+          @click="handleSortSales('sales')"
+        >
+          销量
+          <template v-if="sort === 'sales'">↓</template>
+        </span>
+        <span 
+          class="list-control-order-item" 
+          :class="{ on: sort.indexOf('cost') > -1 }" 
+          @click="handleSortCost('cost')"
+        >
+          价格
+          <template v-if="sort === 'cost'">↑</template>
+        </span>
+      </div>
+    </div>
+    <Product v-for="item in list" :info="item" :key="item.id"></Product>
+    <div class="product-not-found" v-show="!list.length">暂无相关商品</div>
+  </div>
+</template>
+
+
+2. <script> 部分代码如下：
+
+<script>
+import { getShoppingGoodsList } from "@/service/api";
+import util from "@/util";
+import Product from "../../components/product.vue";
+
+export default {
+  components: { Product },
+  data() {
+    return {
+      brand: "",
+      color: "",
+      sort: "",
+      list: [],
+      brands: [],
+      colors: [],
+    };
+  },
+  created() {
+    this.getProductList();
+    this.getBrandOrColor();
+  },
+  methods: {
+    async getProductList() {
+      const res = await getShoppingGoodsList({
+        state: 1,
+        brand: this.brand || "",
+        color: this.color || "",
+        sort: this.sort || "",
+        page: 1,
+        size: 100,
+      });
+      if (res.code === 200) {
+        const data = res.data;
+        if (data.length) {
+          data.map((item) => {
+            item.image = util.getImgUrl(item.image);
+            item.imageDetail = util.getImgUrl(item.imageDetail);
+          });
+          this.list = data;
+        }
+      }
+    },
+    async getBrandOrColor() {
+      try {
+        const res = await getShoppingGoodsList({
+          state: 1,
+          page: 1,
+          size: 100,
+        });
+        if (res.data.length) {
+          const brands = res.data.map((item) => item.brand);
+          this.brands = util.getFilterArray(brands);
+          const colors = res.data.map((item) => item.color);
+          this.colors = util.getFilterArray(colors);
+        }
+      } catch (error) {
+        this.$message.error(error);
+      }
+    },
+    handleFilterBrand(brand) {
+      if (this.brand === brand) {
+        this.brand = "";
+      } else {
+        this.brand = brand;
+      }
+      this.getProductList();
+    },
+    handleFilterColor(color) {
+      if (this.color === color) {
+        this.color = "";
+      } else {
+        this.color = color;
+      }
+      this.getProductList();
+    },
+    handleSortDefault() {
+      this.sort = "";
+    },
+    handleSortSales(sales) {
+      if (this.sort === sales) {
+        this.sort = "";
+      } else {
+        this.sort = sales;
+      }
+      this.getProductList();
+    },
+    handleSortCost(cost) {
+      if (this.sort === cost) {
+        this.sort = "";
+      } else {
+        this.sort = cost;
+      }
+      this.getProductList();
+    },
+  },
+};
+</script>
+
+
+3. <style scoped> 部分代码如下：
+
+<style scoped>
+.list-control {
+  background-color: #f8f8f9;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+.list-control-filter {
+  margin-bottom: 16px;
+}
+.list-control-filter-item,
+.list-control-order-item {
+  cursor: pointer;
+  margin-right: 8px;
+  padding: 4px 8px;
+  border: 1px solid #dddee1;
+  border-radius: 4px;
+  background-color: #fff;
+}
+.list-control-filter-item.on,
+.list-control-order-item.on {
+  background-color: #2d8cf0;
+  border-color: #2d8cf0;
+  color: #fff;
+}
+.product-not-found {
+  text-align: center;
+  padding: 32px;
+  color: #999;
+}
+</style>
+
+
+4. 商品简介组件 (product.vue) 代码如下：
+
+<template>
+  <div class="product">
+    <router-link :to="'/shopping/product/' + info.id" class="product-main">
+      
+      <h4>{{ info.name }}</h4>
+      <h4>销量{{ info.sales }}</h4>
+      <div 
+        class="product-color" 
+        :style="{ background: colors[info.color] }"
+      ></div>
+      <div class="product-cost">¥{{ info.cost }}</div>
+      <div 
+        class="product-add-cart" 
+        @click.prevent="handleAddCart"
+      >
+        加入购物车
+      </div>
+    </router-link>
+  </div>
+</template>
+
+<script>
+import { addCart } from "@/service/api";
+
+export default {
+  props: {
+    info: Object,
+  },
+  data() {
+    return {
+      colors: {
+        白色: "#ffffff",
+        金色: "#dac272",
+        蓝色: "#233472",
+        红色: "#f2352e",
+      },
+    };
+  },
+  methods: {
+    async handleAddCart() {
+      try {
+        const res = await addCart({
+          goodsId: this.info.id,
+        });
+        if (res.code === 200) {
+          this.$store.commit("setCartNum", ++this.$store.state.cartNum);
+        }
+      } catch (error) {
+        this.$message.error(error);
+      }
+    },
+  },
+};
+</script>
+
+<style scoped>
+.product {
+  width: 25%;
+  float: left;
+}
+.product-main {
+  display: block;
+  margin: 16px;
+  padding: 16px;
+  border: 1px solid #dddee1;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #fff;
+  text-align: center;
+  position: relative;
+}
+.product-main img {
+  width: 100%;
+}
+h4 {
+  color: #222;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.product-main:hover h4 {
+  color: #0070c9;
+}
+.product-color {
+  display: block;
+  width: 16px;
+  height: 16px;
+  border: 1px solid #dddee1;
+  border-radius: 50%;
+  margin: 6px auto;
+}
+.product-cost {
+  color: #de4037;
+  margin-top: 6px;
+}
+.product-add-cart {
+  display: none;
+  padding: 4px 8px;
+  background: #2d8cf0;
+  color: #fff;
+  font-size: 12px;
+  border-radius: 3px;
+  cursor: pointer;
+  position: absolute;
+  top: 5px;
+  right: 5px;
+}
+.product-main:hover .product-add-cart {
+  display: inline-block;
+}
+</style>
+
+
+5. 工具文件 (util.js) 代码如下：
+
+import baseURL from './config';
+
+export default {
+  trim(str) {
+    return str.replace(/^\s*(.*?)\s*$/g, '$1');
+  },
+  getFilterArray(array) {
+    const set = new Set(array);
+    return [...set];
+  },
+  getImgUrl(url) {
+    return baseURL.baseurl + '/' + url;
+  },
+};
+
+
+总结
+
+本章节详细介绍了商城用户端商品列表页面的代码结构和功能实现。通过 <template>、<script> 和 <style> 三个部分的代码，实现了商品列表的展示、筛选和排序功能。商品简介组件 (product.vue) 用于展示单个商品的详细信息，并提供加入购物车的功能。工具文件 (util.js) 提供了一些常用的工具函数，如去除前后空格、数组去重和获取图片 URL。后续可以在该模块的基础上，进一步扩展功能，如分页、搜索等。

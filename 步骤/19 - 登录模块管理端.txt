@@ -1,0 +1,196 @@
+19 - 登录模块管理端
+
+一、引言
+
+在 Vue2 项目中，管理端的登录模块是一个重要的组成部分，用于验证管理员身份并提供访问权限。本实验手册将详细介绍一个基于 Vue2 的管理端登录模块的代码结构和功能实现。
+
+二、代码设计
+
+管理端登录模块的代码主要分布在 .vue 文件的 <template>、<script> 和 <style> 三个部分。
+
+1. <template> 部分代码如下：
+
+<template>
+  <div class="login-info">
+    <template>
+      <el-card class="login-info-form">
+        
+        <div class="login-header">商城后台登录</div>
+        <el-form class="form-panel" :model="form" :rules="rules" ref="form">
+          <el-form-item prop="username">
+            <el-input v-model="form.username" placeholder="用户账号" clearable maxlength="20" show-word-limit></el-input>
+          </el-form-item>
+          <el-form-item prop="password">
+            <el-input v-model="form.password" placeholder="用户密码" type="password" clearable maxlength="8" show-word-limit></el-input>
+          </el-form-item>
+          <el-form-item>
+            <el-button style="width: 100%;" type="primary" @click="goLogin">登录</el-button>
+          </el-form-item>
+        </el-form>
+      </el-card>
+    </template>
+    <el-button class="login-back" type="text" @click="goShopping">前往购物商城</el-button>
+  </div>
+</template>
+
+
+整体结构：
+
+1. 登录模块：显示管理端登录表单。
+2. 前往购物商城按钮：提供跳转到购物商城的链接。
+
+使用的组件：
+
+1. el-card：用于创建卡片样式的容器，包裹登录表单。
+2. img：用于显示商城 logo。
+3. el-form：表单组件，用于收集用户输入的数据，并进行验证。
+4. el-form-item：用于包裹表单中的单个输入项。
+5. el-input：输入框组件，用于接收用户输入的用户名和密码等信息。
+6. el-button：按钮组件，分别用于登录和前往购物商城等操作。
+
+绑定的事件：
+
+1. @click="goLogin"：绑定在登录按钮上，点击时触发 goLogin 方法。
+2. @click="goShopping"：绑定在前往购物商城按钮上，点击时触发 goShopping 方法。
+
+2. <script> 部分代码如下：
+
+<script>
+import { login, logout } from "../../service/api.js";
+
+export default {
+  name: "login",
+  data() {
+    return {
+      form: {
+        username: "",
+        password: "",
+      },
+      rules: {
+        username: [
+          { required: true, message: "请输入用户账号", trigger: "blur" },
+        ],
+        password: [
+          { required: true, message: "请输入用户密码", trigger: "blur" },
+        ],
+      },
+    };
+  },
+  methods: {
+    goShopping() {
+      window.location.href = "/shopping/login/logout";
+    },
+    async goLogin() {
+      this.$refs.form.validate(async (valid) => {
+        if (valid) {
+          try {
+            // 登录操作
+            const res = await login({
+              username: this.form.username,
+              password: this.form.password,
+            });
+            this.$store.commit("setUsername", this.form.username);
+            this.$store.commit("setLoginStatus", true);
+            this.$store.commit("setToken", res.data);
+            this.$store.commit("setLoginType", "admin");
+            this.$message.success("登录成功");
+            window.location.href = "/admin/list";
+          } catch (error) {
+            this.$message.error(error);
+          }
+        }
+      });
+    },
+  },
+  async created() {
+    // 获取路由中的参数
+    if (this.$route.params.loginStatus === "logout") {
+      // 请求退出登录
+      await logout({});
+      // 清除本地存储
+      window.localStorage.clear();
+      this.$store.commit("setLoginStatus", false);
+      return;
+    }
+    const loginStatus = this.$store.state.loginStatus;
+    if (loginStatus) {
+      window.alert("您已经是登录状态");
+      window.location.href = "/admin/list";
+    }
+  },
+};
+</script>
+
+
+引入相关模块：
+
+• import { login, logout } from "../../service/api.js";：引入用于登录和注销的 API 方法。
+
+定义组件选项：
+
+• export default { ... }：定义组件的选项对象。
+
+• name: "login"：为组件指定名称。
+
+• data()：返回组件的数据对象。
+
+  • form：包含用户名和密码的对象，用于表单数据绑定。
+
+  • rules：表单的验证规则对象。
+
+• methods：定义组件的方法。
+
+  • goShopping()：点击前往购物商城按钮时触发，通过修改 window.location.href 实现页面跳转。
+
+  • goLogin()：点击登录按钮时触发，进行表单验证，调用登录 API，并根据结果进行相应的操作，如提交成功后跳转到管理端商品列表页面，并显示成功消息。
+
+• async created()：组件创建时执行的生命周期钩子函数。
+
+  • 根据路由参数判断是否为登出状态，如果是，则调用退出登录 API，清除本地存储和 Vuex 中的登录状态。
+
+  • 如果不是登出状态，则根据 Vuex 中的登录状态判断是否已经登录，如果已登录则跳转到管理端商品列表页面并提示已登录状态。
+
+3. <style scoped> 部分代码如下：
+
+<style scoped>
+.login-info {
+  height: 100vh;
+  width: 100vw;
+  text-align: center;
+  background-image: url("@/assets/login/login-bg1.jpg");
+  background-size: 100% 100%;
+}
+.shopping-logo {
+  width: 128px;
+  height: 128px;
+}
+.login-header {
+  font-size: 32px;
+  font-weight: 600;
+  color: #5c6b77;
+  margin-bottom: 20px;
+}
+.login-info-form {
+  width: 500px;
+  height: 500px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+.form-panel {
+  margin-left: 40px;
+  margin-right: 40px;
+}
+.login-back {
+  position: absolute;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+</style>
+
+
+总结
+
+本章节详细介绍了商城管理端登录模块的代码结构和功能实现。通过 <template>、<script> 和 <style> 三个部分的代码，实现了管理员登录和前往购物商城的功能。登录模块通过表单验证、API 调用和状态管理，确保管理员身份验证的安全性和有效性。后续可以在该模块的基础上，进一步扩展功能，如忘记密码、第三方登录等。
